@@ -12,7 +12,7 @@ export async function GET() {
     where: { id: (session as any).userId },
     select: {
       id: true, username: true, email: true, elo: true,
-      wins: true, losses: true, draws: true, tournamentWins: true,
+      wins: true, losses: true, draws: true,
       discordId: true, discordUsername: true, role: true,
       badgePrefs: true, animationsEnabled: true, gameBackground: true,
       chatBanned: true, gameBanned: true, createdAt: true,

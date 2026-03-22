@@ -33,7 +33,6 @@ const MENU_BUTTONS = [
   { key: 'collection', href: '/collection', primary: false },
   { key: 'deckBuilder', href: '/deck-builder', primary: false },
   { key: 'leaderboard', href: '/leaderboard', primary: false },
-  { key: 'tournaments', href: '/tournaments', primary: false },
   { key: 'rules', href: '/learn', primary: false },
   { key: 'settings', href: '/settings', primary: false },
   { key: 'friends', href: '/friends', primary: false },

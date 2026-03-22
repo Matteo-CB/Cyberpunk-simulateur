@@ -13,7 +13,6 @@ interface ProfileData {
   wins: number;
   losses: number;
   draws: number;
-  tournamentWins: number;
   discordUsername?: string;
   createdAt: string;
 }
@@ -181,30 +180,6 @@ export default function ProfilePage({ params }: { params: Promise<{ username: st
             </motion.div>
           ))}
         </div>
-
-        {/* Tournament Wins */}
-        {profile.tournamentWins > 0 && (
-          <div
-            style={{
-              padding: 18,
-              borderRadius: 8,
-              textAlign: 'center',
-              marginBottom: 20,
-              background: 'rgba(255,215,0,0.04)',
-              border: '1px solid rgba(255,215,0,0.2)',
-            }}
-          >
-            <div className="font-refinery" style={{ fontSize: 22, color: '#ffd700', marginBottom: 4 }}>
-              {profile.tournamentWins}
-            </div>
-            <div
-              className="font-blender"
-              style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#ffd700' }}
-            >
-              Tournament Wins
-            </div>
-          </div>
-        )}
 
         {/* Member Since */}
         <div

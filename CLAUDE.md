@@ -6,7 +6,7 @@
 
 ## Project Overview
 
-Fan-made digital simulator of the official Cyberpunk Trading Card Game (TCG) by R. Talsorian Games / CD Projekt Red. Bilingual (EN/FR), real-time multiplayer, AI opponents, tournaments, sealed/draft, deck building, leaderboards, Discord integration. Built on the same architecture as Naruto Mythos TCG Simulator.
+Fan-made digital simulator of the official Cyberpunk Trading Card Game (TCG) by R. Talsorian Games / CD Projekt Red. Bilingual (EN/FR), real-time multiplayer, AI opponents, sealed/draft, deck building, leaderboards, Discord integration. Built on the same architecture as Naruto Mythos TCG Simulator.
 
 **Tech Stack:** Next.js 16, React 19, TypeScript 5, Tailwind CSS 4, Prisma (MongoDB), Socket.IO, Zustand, Framer Motion, next-intl, NextAuth, Resend, ONNX Runtime
 
@@ -139,16 +139,11 @@ cyberpunk-simulateur/
 │       │   ├── sealed/page.tsx     # Sealed/draft mode
 │       │   └── training/page.tsx   # Training with AI coach
 │       ├── game/page.tsx           # Game board
-│       ├── replay/[id]/page.tsx    # Replay viewer
 │       ├── deck-builder/
 │       │   ├── page.tsx            # Deck construction
 │       │   └── manage/page.tsx     # Manage saved decks
 │       ├── collection/page.tsx     # Card collection browser
 │       ├── leaderboard/page.tsx    # ELO rankings
-│       ├── tournaments/
-│       │   ├── page.tsx            # Tournament list
-│       │   ├── [id]/page.tsx       # Tournament details
-│       │   └── results/page.tsx    # Historical results
 │       ├── learn/page.tsx          # Rules & quiz
 │       ├── settings/page.tsx       # User preferences
 │       ├── profile/[username]/page.tsx  # Player profiles
@@ -182,7 +177,7 @@ cyberpunk-simulateur/
 │   │   ├── ActionBar.tsx           # Play/Attack/Pass/Sell/Call buttons
 │   │   ├── GameLog.tsx             # Action history
 │   │   ├── GameInfo.tsx            # Turn, phase, Street Cred
-│   │   ├── GameEndScreen.tsx       # Win/loss with replay
+│   │   ├── GameEndScreen.tsx       # Win/loss screen
 │   │   ├── TargetSelector.tsx      # Effect target picking
 │   │   ├── DiceRollAnimation.tsx   # Gig dice roll animation
 │   │   ├── FightAnimation.tsx      # Unit vs Unit combat
@@ -191,7 +186,6 @@ cyberpunk-simulateur/
 │   │   ├── MulliganDialog.tsx      # Opening hand mulligan
 │   │   ├── DeckSelector.tsx        # Pre-game deck selection
 │   │   ├── GameChat.tsx            # In-game chat
-│   │   ├── SpectatorBanner.tsx     # Spectator indicator
 │   │   ├── TrainingCoachPanel.tsx  # AI coaching display
 │   │   └── HotseatSwitchOverlay.tsx
 │   ├── cards/
@@ -207,15 +201,6 @@ cyberpunk-simulateur/
 │   │   ├── SealedPoolReview.tsx    # View opened cards
 │   │   ├── SealedDeckBuilder.tsx   # Build deck from pool
 │   │   └── SealedTimer.tsx         # Countdown timer
-│   ├── tournament/
-│   │   ├── CreateTournamentForm.tsx
-│   │   ├── BracketTree.tsx
-│   │   ├── BracketMatch.tsx
-│   │   ├── TournamentCard.tsx
-│   │   ├── TournamentAdmin.tsx
-│   │   ├── TournamentDeckSelector.tsx
-│   │   ├── TournamentResults.tsx
-│   │   └── AbsenceTimer.tsx
 │   ├── social/
 │   │   ├── FriendsList.tsx
 │   │   ├── FriendRequestsList.tsx
@@ -228,9 +213,6 @@ cyberpunk-simulateur/
 │   │   ├── QuizSession.tsx
 │   │   ├── QuizResults.tsx
 │   │   └── QuizLeaderboard.tsx
-│   ├── replay/
-│   │   ├── ReplayBoard.tsx
-│   │   └── PlaybackControls.tsx
 │   └── ui/
 │       ├── Footer.tsx
 │       ├── EloBadge.tsx
@@ -268,15 +250,10 @@ cyberpunk-simulateur/
 │   │   └── ContinuousEffects.ts    # Passive/ongoing effect tracking
 │   ├── sealed/
 │   │   └── boosterGenerator.ts     # Generate sealed boosters
-│   ├── tournament/
-│   │   ├── tournamentEngine.ts     # Bracket generation & advancement
-│   │   ├── absenceManager.ts       # Absence detection & auto-forfeit
-│   │   └── leagueUtils.ts          # League tier definitions
 │   ├── elo/
 │   │   └── elo.ts                  # ELO calculation (K=32/<2000, K=16/≥2000)
 │   ├── socket/
 │   │   ├── server.ts               # Socket.IO event handlers
-│   │   ├── tournamentHandlers.ts   # Tournament socket events
 │   │   └── maintenance.ts          # Graceful shutdown & drain
 │   ├── discord/
 │   │   ├── roleSync.ts             # Discord role synchronization
@@ -295,7 +272,6 @@ cyberpunk-simulateur/
 ├── stores/
 │   ├── gameStore.ts                # Game state (Zustand)
 │   ├── deckBuilderStore.ts         # Deck building session
-│   ├── tournamentStore.ts          # Tournament state
 │   ├── socialStore.ts              # Friends, invites
 │   ├── settingsStore.ts            # User preferences
 │   └── uiStore.ts                  # UI modals, panels, selections
@@ -320,7 +296,7 @@ cyberpunk-simulateur/
 ### User
 ```
 id, username (unique), email (unique), password (bcrypt)
-elo (default 500), wins, losses, draws, tournamentWins
+elo (default 500), wins, losses, draws
 discordId?, discordUsername?, discordHighestElo
 role: "user" | "admin" | "tester"
 badgePrefs: String[]
@@ -343,35 +319,6 @@ createdAt, completedAt?
 ```
 id, userId, name, cardIds: String[], legendIds: String[]
 sortOrder, createdAt, updatedAt
-```
-
-### Tournament
-```
-id, name, type, status, gameMode, maxPlayers
-currentRound, totalRounds, isPublic, joinCode
-creatorId, requiresDiscord, useBanList
-sealedBoosterCount?, discordRoleReward?, discordRoleBadge?
-bannedCardIds[], allowedLeagues[]
-startedAt?, completedAt?, winnerId?, winnerUsername?
-→ participants[], matches[]
-```
-
-### TournamentParticipant
-```
-id, tournamentId, userId, username, seed
-eliminated, eliminatedRound?, hasBye
-sealedPool? (Json), sealedDeck? (Json)
-unique: [tournamentId, userId]
-```
-
-### TournamentMatch
-```
-id, tournamentId, round, matchIndex
-player1Id?, player2Id?, player1Username?, player2Username?
-winnerId?, winnerUsername?, isBye, status
-roomCode?, gameId?, absenceDeadline?, absentPlayerId?
-startedAt?, completedAt?
-unique: [tournamentId, round, matchIndex]
 ```
 
 ### Friendship
@@ -416,7 +363,7 @@ reportedBy, updatedBy, createdAt, updatedAt
 
 ### ChatMessage
 ```
-id, roomCode, userId, username, message, isEmote, isSpectator, createdAt
+id, roomCode, userId, username, message, isEmote, createdAt
 ```
 
 ### ChatReport
@@ -662,7 +609,6 @@ interface CardEffect {
 - **Match Invites:** Invite friends to games with room codes
 - **In-Game Chat:** Real-time Socket.IO chat with emotes
 - **Chat Moderation:** Report messages, admin review, bans
-- **Spectators:** Watch games in real-time
 
 ### Game Modes
 1. **Play vs AI** — Easy/Medium/Hard/Impossible difficulties
@@ -676,13 +622,6 @@ interface CardEffect {
 - Real-time validation (40-50 cards, 3 Legends, RAM limits, max 3 copies)
 - Card filtering by type, color, classification, keyword
 - Save/load/delete/reorder decks
-
-### Tournament System
-- Single-elimination brackets with bye handling
-- Standard and sealed tournament modes
-- Absence timer with auto-forfeit
-- Discord role rewards for winners
-- Join by code
 
 ### Leaderboard & ELO
 - ELO formula: `E = 1/(1+10^((opp-self)/400))`, K=32 (<2000) / K=16 (≥2000)
@@ -701,11 +640,6 @@ interface CardEffect {
 - Interactive lessons on game rules
 - Quiz with card effect questions
 - Score tracking with leaderboard
-
-### Replay System
-- Full game state serialized per action
-- Step forward/backward with playback controls
-- Action narration in log
 
 ### Settings
 - Animations toggle
@@ -805,12 +739,6 @@ All animations use **Framer Motion** and respect the `animationsEnabled` user se
 - `game:your-turn` — turn notification
 - `game:ended` — game over with ELO changes
 
-### Tournament
-- `tournament:subscribe` / `tournament:unsubscribe`
-- `tournament:ready` / `tournament:report-present`
-- `tournament:match-ready` / `tournament:match-updated`
-- `tournament:absence-timer` / `tournament:player-forfeited`
-
 ### Chat
 - `chat:send` / `chat:emote` / `chat:history`
 
@@ -824,7 +752,7 @@ All animations use **Framer Motion** and respect the `animationsEnabled` user se
 ## Discord Integration
 - **OAuth login** with account linking/unlinking
 - **Role sync** based on ELO achievements
-- **Tournament rewards** with role assignment
+
 - **Rank-up webhook** notifications
 - **Highest ELO tracking** for Discord profile
 

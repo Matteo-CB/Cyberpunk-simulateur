@@ -6,7 +6,7 @@
     "collection": "COLLECTION",
     "deckBuilder": "DECK BUILDER",
     "leaderboard": "LEADERBOARD",
-    "tournaments": "TOURNAMENTS",
+
     "settings": "SETTINGS",
     "rules": "RULES",
     "signIn": "Sign In",
@@ -47,7 +47,7 @@
     "mulligan": "Mulligan",
     "legendary": "LEGENDARY",
     "flatlined": "FLATLINED",
-    "watchReplay": "Watch Replay",
+
     "backToMenu": "Back to Menu",
     "streetCred": "Street Cred",
     "gigs": "Gigs",
@@ -294,20 +294,6 @@
     "draws": "D",
     "winRate": "Win %",
     "search": "Search player..."
-  },
-  "tournaments": {
-    "title": "TOURNAMENTS",
-    "subtitle": "Compete for glory",
-    "create": "Create Tournament",
-    "join": "Join",
-    "leave": "Leave",
-    "start": "Start",
-    "bracket": "Bracket",
-    "participants": "Participants",
-    "status": "Status",
-    "pending": "Pending",
-    "inProgress": "In Progress",
-    "completed": "Completed"
   },
   "settings": {
     "title": "SETTINGS",

@@ -4,10 +4,30 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import CyberBackground from '@/components/CyberBackground';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
-import { Link } from '@/lib/i18n/navigation';
+import { useRouter, Link } from '@/lib/i18n/navigation';
 
 export default function PlayOnlinePage() {
+  const router = useRouter();
   const [roomCode, setRoomCode] = useState('');
+
+  const generateRoomCode = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = '';
+    for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+    return code;
+  };
+
+  const handleCreateRoom = () => {
+    const code = generateRoomCode();
+    sessionStorage.setItem('gameConfig', JSON.stringify({ mode: 'online', roomCode: code, isHost: true }));
+    router.push('/game');
+  };
+
+  const handleJoinRoom = () => {
+    if (roomCode.length !== 6) return;
+    sessionStorage.setItem('gameConfig', JSON.stringify({ mode: 'online', roomCode, isHost: false }));
+    router.push('/game');
+  };
 
   return (
     <div className="relative min-h-screen overflow-hidden" style={{ background: '#0a0a12' }}>
@@ -86,6 +106,7 @@ export default function PlayOnlinePage() {
                 e.currentTarget.style.boxShadow = 'none';
                 e.currentTarget.style.background = '#111119';
               }}
+              onClick={handleCreateRoom}
             >
               CREATE ROOM
             </button>
@@ -145,6 +166,7 @@ export default function PlayOnlinePage() {
                   outline: 'none',
                 }}
                 disabled={roomCode.length !== 6}
+                onClick={handleJoinRoom}
                 onMouseEnter={(e) => {
                   if (roomCode.length === 6) {
                     e.currentTarget.style.borderColor = '#22c55e';

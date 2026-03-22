@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import GameBoard from '@/components/game/GameBoard';
 import { GameEngine } from '@/lib/engine/GameEngine';
-import { getAllCards, getLegends } from '@/lib/data/cardLoader';
+import { getAllCards, getCardById } from '@/lib/data/cardLoader';
 import type { GameState } from '@/lib/engine/types';
+import type { CardData } from '@/lib/data/types';
 
 export default function GamePage() {
   const t = useTranslations();
@@ -16,7 +17,6 @@ export default function GamePage() {
     const configStr = sessionStorage.getItem('gameConfig');
     const config = configStr ? JSON.parse(configStr) : { mode: 'ai', difficulty: 'easy' };
 
-    // Build random decks for now (until deck builder is connected)
     const allCards = getAllCards();
     const legends = allCards.filter((c) => c.card_type === 'legend');
     const nonLegends = allCards.filter((c) => c.card_type !== 'legend');
@@ -60,18 +60,58 @@ export default function GamePage() {
       return deck;
     };
 
-    const state = GameEngine.createGame(
-      pickDeck(),
-      pickLegends(),
-      pickDeck(),
-      pickLegends(),
-      {
-        isAI: config.mode === 'ai',
-        aiDifficulty: config.difficulty || 'easy',
+    // Load a saved deck by its card/legend IDs
+    const loadSavedDeck = (deck: { cardIds: string[]; legendIds: string[] }): { cards: CardData[]; legends: CardData[] } | null => {
+      const deckCards = deck.cardIds.map((id) => getCardById(id)).filter((c): c is CardData => !!c);
+      const deckLegends = deck.legendIds.map((id) => getCardById(id)).filter((c): c is CardData => !!c);
+      if (deckCards.length >= 40 && deckLegends.length === 3) {
+        return { cards: deckCards, legends: deckLegends };
       }
-    );
+      return null;
+    };
 
-    setGameState(state);
+    // Try to use a saved deck for player 1
+    const initGame = async () => {
+      let player1Cards = pickDeck();
+      let player1Legends = pickLegends();
+
+      try {
+        const res = await fetch('/api/decks');
+        if (res.ok) {
+          const decks = await res.json();
+          if (Array.isArray(decks) && decks.length > 0) {
+            // Use the deck specified in config, or default to the first one
+            const targetDeckId = config.deckId;
+            const selectedDeck = targetDeckId
+              ? decks.find((d: { id: string }) => d.id === targetDeckId) || decks[0]
+              : decks[0];
+            const loaded = loadSavedDeck(selectedDeck);
+            if (loaded) {
+              player1Cards = loaded.cards;
+              player1Legends = loaded.legends;
+            }
+          }
+        }
+      } catch {
+        // Fallback to random deck on any error
+      }
+
+      // AI opponent always uses random deck
+      const state = GameEngine.createGame(
+        player1Cards,
+        player1Legends,
+        pickDeck(),
+        pickLegends(),
+        {
+          isAI: config.mode === 'ai',
+          aiDifficulty: config.difficulty || 'easy',
+        }
+      );
+
+      setGameState(state);
+    };
+
+    initGame();
   }, []);
 
   if (!gameState) {

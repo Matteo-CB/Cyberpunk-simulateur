@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Fan-made digital simulator of the official Cyberpunk Trading Card Game (TCG) by Weird CO / CD Projekt Red / R. Talsorian Games. Developed by HiddenLab (hiddenlab.fr). Bilingual (EN/FR), real-time multiplayer, AI opponents, tournaments, deck building, leaderboards, Discord integration. Built on the same architecture as Naruto Mythos TCG Simulator.
+Fan-made digital simulator of the official Cyberpunk Trading Card Game (TCG) by Weird CO / CD Projekt Red / R. Talsorian Games. Developed by HiddenLab (hiddenlab.fr). Bilingual (EN/FR), real-time multiplayer, AI opponents, deck building, leaderboards, Discord integration. Built on the same architecture as Naruto Mythos TCG Simulator.
 
 **Admin Usernames:** `['Kutxyt', 'admin', 'Daiki0']` — hardcoded in all admin API routes. Also `TRACKER_USERS: ['Kutxyt', 'admin', 'Andy']` for card tracker access.
 
@@ -265,19 +265,6 @@ cyberpunk-simulateur/
 │   │   │   ├── decline/route.ts       # POST decline
 │   │   │   ├── cancel/route.ts        # POST cancel
 │   │   │   └── pending/route.ts       # GET pending invites
-│   │   ├── tournaments/
-│   │   │   ├── route.ts               # GET list, POST create
-│   │   │   ├── join-by-code/route.ts  # POST join
-│   │   │   └── [id]/
-│   │   │       ├── route.ts           # GET details, DELETE
-│   │   │       ├── join/route.ts      # POST join
-│   │   │       ├── leave/route.ts     # POST leave
-│   │   │       ├── start/route.ts     # POST start
-│   │   │       ├── pairings/route.ts  # POST generate pairings
-│   │   │       └── matches/
-│   │   │           ├── route.ts       # GET matches
-│   │   │           └── [matchId]/
-│   │   │               └── forfeit/route.ts # POST forfeit
 │   │   ├── leaderboard/route.ts       # GET ranked players
 │   │   ├── profile/[username]/route.ts # GET player profile
 │   │   ├── quiz/
@@ -313,16 +300,11 @@ cyberpunk-simulateur/
 │       │   ├── hotseat/page.tsx    # Local 2-player (shared screen)
 │       │   └── training/page.tsx   # Training with AI coach
 │       ├── game/page.tsx           # Game board (main gameplay)
-│       ├── replay/[id]/page.tsx    # Replay viewer
 │       ├── deck-builder/
 │       │   ├── page.tsx            # Deck construction (drag-drop, filters)
 │       │   └── manage/page.tsx     # Manage saved decks (edit, delete, reorder)
 │       ├── collection/page.tsx     # Card collection browser (grid, filters, detail modal)
 │       ├── leaderboard/page.tsx    # ELO rankings (tiers, search, pagination)
-│       ├── tournaments/
-│       │   ├── page.tsx            # Tournament list (browse, create, join)
-│       │   ├── [id]/page.tsx       # Tournament details (bracket, matches, participants)
-│       │   └── results/page.tsx    # Historical results
 │       ├── learn/page.tsx          # Rules lessons & quiz launcher
 │       ├── settings/page.tsx       # User preferences (animations, background, badges)
 │       ├── profile/[username]/page.tsx  # Player profile (ELO history, games, decks)
@@ -346,23 +328,20 @@ cyberpunk-simulateur/
 │   ├── game/                       # ~25 components for game board
 │   ├── cards/                      # ~6 card display components
 │   ├── learn/                      # ~4 lesson/quiz components
-│   ├── tournament/                 # ~8 tournament components
 │   ├── social/                     # ~6 social/friends components
-│   ├── replay/                     # ~2 replay viewer components
 │   └── ui/                         # ~6 shared UI components
 ├── lib/
 │   ├── engine/                     # Game logic (GameEngine, types, phases, rules)
 │   ├── effects/                    # Card effect resolution (EffectEngine + 46 handlers)
 │   ├── ai/                         # AI opponent (4 difficulties + coach)
-│   ├── tournament/                 # Bracket generation, absence management, leagues
 │   ├── elo/                        # ELO calculation
-│   ├── socket/                     # Socket.IO handlers (game, tournament, chat, maintenance)
+│   ├── socket/                     # Socket.IO handlers (game, chat, maintenance)
 │   ├── discord/                    # Role sync, rank-up webhook
 │   ├── email/                      # Resend integration (password reset)
 │   ├── auth/                       # NextAuth config (Discord + Credentials)
 │   ├── data/                       # Card data, loader, index, types [PARTIAL EXISTS]
 │   └── i18n/                       # Routing, navigation, request [EXISTS]
-├── stores/                         # Zustand stores (game, deck, tournament, social, settings, ui)
+├── stores/                         # Zustand stores (game, deck, social, settings, ui)
 ├── server/
 │   └── index.ts                    # Express + Socket.IO + Next.js custom server
 ├── prisma/
@@ -401,7 +380,6 @@ model User {
   wins               Int       @default(0)
   losses             Int       @default(0)
   draws              Int       @default(0)
-  tournamentWins     Int       @default(0)
   discordId          String?   // Linked Discord account ID
   discordUsername    String?   // Display name from Discord
   discordHighestElo  Int       @default(0) // Peak ELO for Discord role sync
@@ -439,7 +417,7 @@ model Game {
   aiDifficulty   String?   // "easy" | "medium" | "hard" | "impossible"
   status         String    @default("in_progress") // "in_progress" | "completed" | "abandoned"
   winnerId       String?   @db.ObjectId
-  gameState      Json      // Full serialized GameState (for replay)
+  gameState      Json      // Full serialized GameState
   player1Score   Int       @default(0) // Number of Gig Dice
   player2Score   Int       @default(0)
   eloChange      Int?      // ELO delta applied to both players
@@ -462,79 +440,6 @@ model Deck {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   user       User     @relation(fields: [userId], references: [id])
-}
-```
-
-### Tournament
-```prisma
-model Tournament {
-  id                 String   @id @default(auto()) @map("_id") @db.ObjectId
-  name               String
-  type               String   // "casual" | "ranked" | "league"
-  status             String   @default("pending") // "pending" | "in_progress" | "completed" | "cancelled"
-  gameMode           String   @default("standard") // "standard"
-  maxPlayers         Int      @default(8)
-  currentRound       Int      @default(0)
-  totalRounds        Int      @default(0)
-  isPublic           Boolean  @default(true)
-  joinCode           String?  @unique
-  creatorId          String   @db.ObjectId
-  requiresDiscord    Boolean  @default(false)
-  useBanList         Boolean  @default(false)
-
-  discordRoleReward  String?  // Discord role ID for winner
-  discordRoleBadge   String?  // Discord role ID for participation
-  bannedCardIds      String[]
-  allowedLeagues     String[]
-  startedAt          DateTime?
-  completedAt        DateTime?
-  winnerId           String?
-  winnerUsername      String?
-  participants       TournamentParticipant[]
-  matches            TournamentMatch[]
-}
-```
-
-### TournamentParticipant
-```prisma
-model TournamentParticipant {
-  id               String   @id @default(auto()) @map("_id") @db.ObjectId
-  tournamentId     String   @db.ObjectId
-  userId           String   @db.ObjectId
-  username         String
-  seed             Int      @default(0)
-  eliminated       Boolean  @default(false)
-  eliminatedRound  Int?
-  hasBye           Boolean  @default(false)
-
-  tournament       Tournament @relation(fields: [tournamentId], references: [id])
-  @@unique([tournamentId, userId])
-}
-```
-
-### TournamentMatch
-```prisma
-model TournamentMatch {
-  id               String    @id @default(auto()) @map("_id") @db.ObjectId
-  tournamentId     String    @db.ObjectId
-  round            Int
-  matchIndex       Int
-  player1Id        String?   @db.ObjectId
-  player2Id        String?   @db.ObjectId
-  player1Username  String?
-  player2Username  String?
-  winnerId         String?   @db.ObjectId
-  winnerUsername    String?
-  isBye            Boolean   @default(false)
-  status           String    @default("pending") // "pending" | "ready" | "in_progress" | "completed" | "forfeit"
-  roomCode         String?
-  gameId           String?   @db.ObjectId
-  absenceDeadline  DateTime?
-  absentPlayerId   String?   @db.ObjectId
-  startedAt        DateTime?
-  completedAt      DateTime?
-  tournament       Tournament @relation(fields: [tournamentId], references: [id])
-  @@unique([tournamentId, round, matchIndex])
 }
 ```
 
@@ -616,7 +521,6 @@ model ChatMessage {
   username    String
   message     String
   isEmote     Boolean  @default(false)
-  isSpectator Boolean  @default(false)
   createdAt   DateTime @default(now())
 }
 
@@ -718,7 +622,7 @@ interface GameState {
   activePlayer: PlayerID
   player1: PlayerState
   player2: PlayerState
-  log: GameLogEntry[]           // Full action history (for replay)
+  log: GameLogEntry[]           // Full action history
   pendingEffects: PendingEffect[]   // Effects waiting to resolve
   pendingActions: PendingAction[]   // Player choices needed
   overtime: boolean             // True when no more Fixer dice
@@ -1015,9 +919,8 @@ Discord is both a **primary login method** AND a **manual linking** option:
 ### Social Features
 - **Friends System:** Send/accept/decline/remove friend requests. View friend list. Check relationship status
 - **Match Invites:** Invite friends to games via room code. Accept/decline/cancel. Pending list
-- **In-Game Chat:** Real-time Socket.IO. Message history. Emote support (isEmote flag). Spectator chat
+- **In-Game Chat:** Real-time Socket.IO. Message history. Emote support (isEmote flag)
 - **Chat Moderation:** Report messages (reason required). Admin review. Actions: warn, mute, ban
-- **Spectators:** Join games as observer. See both players' public state. Chat participation
 
 ### Game Modes (4 modes)
 1. **Play vs AI** — Select difficulty (Easy/Medium/Hard/Impossible). Select deck. Full game with AI opponent
@@ -1037,17 +940,6 @@ Discord is both a **primary login method** AND a **manual linking** option:
 - **Card Preview:** Hover for full art + effect text
 - **Deck Stats:** Card count, color distribution, cost curve, RAM usage
 - **Persistence:** Save/load/delete/rename/reorder decks (database)
-
-### Tournament System
-- **Types:** Casual, Ranked, League-restricted
-- **Modes:** Standard (bring your deck)
-- **Brackets:** Single-elimination with automatic bye handling
-- **Seeding:** Based on ELO or random
-- **Match Management:** Room codes generated per match. Players join via code
-- **Absence Timer:** Countdown deadline. Auto-forfeit if player doesn't show
-- **Discord Rewards:** Winner gets configurable Discord role. Participation badge role
-- **Join Methods:** Browse list, join by tournament code
-- **Admin Controls:** Start/cancel tournament, modify brackets, manage participants
 
 ### Leaderboard & ELO System
 - **ELO Formula:**
@@ -1085,13 +977,6 @@ Discord is both a **primary login method** AND a **manual linking** option:
 - **Scoring:** Correct/total, accuracy %, best streak
 - **Leaderboard:** Top quiz scorers
 
-### Replay System
-- Full GameState serialized in JSON per game (stored in Game model)
-- Action history log (GameLogEntry[])
-- Playback controls: step forward/backward, play/pause, speed control
-- Jump to specific turn/phase
-- Action narration in game log
-
 ### Settings
 - **Animations:** Toggle on/off (all Framer Motion animations respect this)
 - **Game Background:** Select from available backgrounds
@@ -1099,9 +984,8 @@ Discord is both a **primary login method** AND a **manual linking** option:
 - **Language:** EN/FR via i18n (LanguageSwitcher)
 
 ### Admin Panel
-- **Dashboard:** Player count, active games, tournament stats
+- **Dashboard:** Player count, active games
 - **Card Management:** Edit card data, track implementation issues (to_fix → verified)
-- **Ban List:** Add/remove cards from tournament ban list
 - **User Management:** Search players, view profiles, issue bans (chat/game, timed/permanent)
 - **Site Settings:** Toggle leagues. Configure Discord role IDs
 - **Suggestions:** Community feature requests with status workflow (backlog → planned → in_progress → done → rejected)
@@ -1210,31 +1094,17 @@ All animations use **Framer Motion** and respect `animationsEnabled` user settin
 | `game:pending-action` | Server→Client | `{ pendingAction: PendingAction }` |
 | `game:ended` | Server→Client | `{ winnerId, eloChange, player1Score, player2Score }` |
 
-### Tournament
-| Event | Direction | Data |
-|-------|-----------|------|
-| `tournament:subscribe` | Client→Server | `{ tournamentId }` |
-| `tournament:unsubscribe` | Client→Server | `{ tournamentId }` |
-| `tournament:ready` | Client→Server | `{ matchId }` |
-| `tournament:report-present` | Client→Server | `{ matchId }` |
-| `tournament:match-ready` | Server→Client | `{ matchId, roomCode }` |
-| `tournament:match-updated` | Server→Client | `{ match: TournamentMatch }` |
-| `tournament:absence-timer` | Server→Client | `{ matchId, deadline }` |
-| `tournament:player-forfeited` | Server→Client | `{ matchId, forfeitedPlayerId }` |
-| `tournament:bracket-update` | Server→All | `{ tournamentId, bracket }` |
-
 ### Chat
 | Event | Direction | Data |
 |-------|-----------|------|
 | `chat:send` | Client→Server | `{ roomCode, message }` |
 | `chat:emote` | Client→Server | `{ roomCode, emote }` |
-| `chat:message` | Server→Room | `{ userId, username, message, isEmote, isSpectator, timestamp }` |
+| `chat:message` | Server→Room | `{ userId, username, message, isEmote, timestamp }` |
 | `chat:history` | Server→Client | `ChatMessage[]` |
 
 ### Timers & Limits
 - **Action timeout:** 2 minutes per action. 3 consecutive timeouts = auto-forfeit
 - **Disconnect grace:** 2 minutes to reconnect before auto-forfeit
-- **Absence deadline:** Configurable per tournament (default 5 minutes)
 
 ---
 
@@ -1243,7 +1113,7 @@ All animations use **Framer Motion** and respect `animationsEnabled` user settin
 - **Unlink:** Disconnect Discord without deleting game account
 - **Role Sync:** Automatic Discord role based on current ELO tier
 - **Highest ELO Tracking:** `discordHighestElo` persists peak for role retention
-- **Tournament Rewards:** Winner gets Discord role (`discordRoleReward`). Participants get badge role (`discordRoleBadge`)
+
 - **Rank-Up Webhook:** Discord channel notification when player reaches new ELO tier
 - **Bot Token:** Server-side bot for role management (requires BOT_DISCORD_TOKEN)
 

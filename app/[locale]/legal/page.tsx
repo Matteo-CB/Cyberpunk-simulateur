@@ -155,7 +155,7 @@ export default function LegalPage() {
               </div>
               <div style={bulletItem}>
                 <Bullet />
-                <span><strong style={{ color: '#e0e8f0' }}>Game data:</strong> Game history, ELO ratings, deck compositions, tournament results</span>
+                <span><strong style={{ color: '#e0e8f0' }}>Game data:</strong> Game history, ELO ratings, deck compositions</span>
               </div>
               <div style={bulletItem}>
                 <Bullet />

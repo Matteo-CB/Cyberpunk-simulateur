@@ -16,7 +16,7 @@ model User {
   wins                Int       @default(0)
   losses              Int       @default(0)
   draws               Int       @default(0)
-  tournamentWins      Int       @default(0)
+
   discordId           String?
   discordUsername      String?
   discordHighestElo   Int       @default(0)
@@ -73,73 +73,6 @@ model Deck {
   updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id])
-}
-
-model Tournament {
-  id                String    @id @default(auto()) @map("_id") @db.ObjectId
-  name              String
-  type              String
-  status            String    @default("pending")
-  gameMode          String    @default("standard")
-  maxPlayers        Int       @default(8)
-  currentRound      Int       @default(0)
-  totalRounds       Int       @default(0)
-  isPublic          Boolean   @default(true)
-  joinCode          String?   @unique
-  creatorId         String    @db.ObjectId
-  requiresDiscord   Boolean   @default(false)
-  useBanList        Boolean   @default(false)
-  discordRoleReward String?
-  discordRoleBadge  String?
-  bannedCardIds     String[]
-  allowedLeagues    String[]
-  startedAt         DateTime?
-  completedAt       DateTime?
-  winnerId          String?
-  winnerUsername     String?
-
-  participants TournamentParticipant[]
-  matches      TournamentMatch[]
-}
-
-model TournamentParticipant {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  tournamentId    String   @db.ObjectId
-  userId          String   @db.ObjectId
-  username        String
-  seed            Int      @default(0)
-  eliminated      Boolean  @default(false)
-  eliminatedRound Int?
-  hasBye          Boolean  @default(false)
-
-  tournament Tournament @relation(fields: [tournamentId], references: [id])
-
-  @@unique([tournamentId, userId])
-}
-
-model TournamentMatch {
-  id              String    @id @default(auto()) @map("_id") @db.ObjectId
-  tournamentId    String    @db.ObjectId
-  round           Int
-  matchIndex      Int
-  player1Id       String?   @db.ObjectId
-  player2Id       String?   @db.ObjectId
-  player1Username String?
-  player2Username String?
-  winnerId        String?   @db.ObjectId
-  winnerUsername   String?
-  isBye           Boolean   @default(false)
-  status          String    @default("pending")
-  roomCode        String?
-  gameId          String?   @db.ObjectId
-  absenceDeadline DateTime?
-  absentPlayerId  String?   @db.ObjectId
-  startedAt       DateTime?
-  completedAt     DateTime?
-
-  tournament Tournament @relation(fields: [tournamentId], references: [id])
-
-  @@unique([tournamentId, round, matchIndex])
 }
 
 model Friendship {
@@ -222,7 +155,6 @@ model ChatMessage {
   username    String
   message     String
   isEmote     Boolean  @default(false)
-  isSpectator Boolean  @default(false)
   createdAt   DateTime @default(now())
 }
 

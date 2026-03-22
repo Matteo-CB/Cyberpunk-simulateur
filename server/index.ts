@@ -2,6 +2,8 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import next from 'next';
+import { GameEngine } from '@/lib/engine/GameEngine';
+import type { GameState, GameAction, PlayerID } from '@/lib/engine/types';
 
 // ------------------------------------------------------------------
 // Configuration
@@ -34,7 +36,6 @@ interface RoomData {
   hostUsername: string;
   guestId: string | null;
   guestUsername: string | null;
-  spectators: string[];
   gameState: unknown | null;
   createdAt: number;
 }
@@ -45,7 +46,6 @@ interface ChatPayload {
   username: string;
   message: string;
   isEmote?: boolean;
-  isSpectator?: boolean;
 }
 
 interface GameActionPayload {
@@ -155,7 +155,6 @@ async function startServer() {
           hostUsername: username,
           guestId: null,
           guestUsername: null,
-          spectators: [],
           gameState: null,
           createdAt: Date.now(),
         };
@@ -180,27 +179,14 @@ async function startServer() {
           roomCode: string;
           userId: string;
           username: string;
-          asSpectator?: boolean;
         },
         ack?: (res: { ok: boolean; error?: string; room?: RoomData }) => void
       ) => {
-        const { roomCode, userId, username, asSpectator } = data;
+        const { roomCode, userId, username } = data;
         const room = rooms.get(roomCode);
 
         if (!room) {
           if (ack) ack({ ok: false, error: 'Room not found' });
-          return;
-        }
-
-        if (asSpectator) {
-          if (!room.spectators.includes(userId)) {
-            room.spectators.push(userId);
-          }
-          socket.join(roomCode);
-          socketToRoom.set(socket.id, roomCode);
-          socketToUser.set(socket.id, { userId, username });
-          io.to(roomCode).emit('room:updated', room);
-          if (ack) ack({ ok: true, room });
           return;
         }
 
@@ -256,12 +242,60 @@ async function startServer() {
           return;
         }
 
-        // Broadcast action to all clients in the room (including sender for confirmation)
-        io.to(roomCode).emit('game:action-received', {
-          action,
-          player,
-          timestamp: Date.now(),
-        });
+        // Apply the action via GameEngine if there is game state
+        if (room.gameState) {
+          try {
+            const newState = GameEngine.applyAction(
+              room.gameState as GameState,
+              player as PlayerID,
+              action as GameAction
+            );
+            room.gameState = newState;
+
+            // Broadcast updated state to ALL clients in the room
+            io.to(roomCode).emit('game:state-update', {
+              gameState: newState,
+              timestamp: Date.now(),
+            });
+
+            // Notify the player whose turn it is
+            const activePlayer = newState.activePlayer;
+            // Find all sockets in the room and emit game:your-turn to the active player
+            const socketsInRoom = io.sockets.adapter.rooms.get(roomCode);
+            if (socketsInRoom) {
+              for (const socketId of socketsInRoom) {
+                const userData = socketToUser.get(socketId);
+                if (userData) {
+                  // Determine which player this socket is
+                  const isPlayer1 = room.hostId === userData.userId;
+                  const socketPlayer: PlayerID = isPlayer1 ? 'player1' : 'player2';
+                  if (socketPlayer === activePlayer) {
+                    io.to(socketId).emit('game:your-turn', {
+                      player: activePlayer,
+                      phase: newState.phase,
+                      turn: newState.turn,
+                    });
+                  }
+                }
+              }
+            }
+          } catch (err) {
+            console.error(`[socket] Error applying game action in room ${roomCode}:`, err);
+            // Fall back to broadcasting the raw action
+            io.to(roomCode).emit('game:action-received', {
+              action,
+              player,
+              timestamp: Date.now(),
+            });
+          }
+        } else {
+          // No game state yet, just broadcast the action
+          io.to(roomCode).emit('game:action-received', {
+            action,
+            player,
+            timestamp: Date.now(),
+          });
+        }
 
         if (ack) ack({ ok: true });
       }
@@ -283,7 +317,7 @@ async function startServer() {
 
     // --- Chat: Send ---
     socket.on('chat:send', (payload: ChatPayload) => {
-      const { roomCode, userId, username, message, isEmote, isSpectator } =
+      const { roomCode, userId, username, message, isEmote } =
         payload;
 
       // Basic validation
@@ -297,7 +331,6 @@ async function startServer() {
         username,
         message: message.trim(),
         isEmote: isEmote || false,
-        isSpectator: isSpectator || false,
         timestamp: Date.now(),
       };
 
@@ -334,9 +367,6 @@ async function startServer() {
     socketToRoom.delete(socket.id);
 
     if (user) {
-      // Remove from spectators
-      room.spectators = room.spectators.filter((id) => id !== user.userId);
-
       // If the guest leaves
       if (room.guestId === user.userId) {
         room.guestId = null;

@@ -9,12 +9,11 @@ interface GameEndScreenProps {
   playerScore: number;
   opponentScore: number;
   eloChange?: number;
-  onReplay?: () => void;
   onMenu?: () => void;
 }
 
 export default function GameEndScreen({
-  isWinner, winReason, playerScore, opponentScore, eloChange, onReplay, onMenu,
+  isWinner, winReason, playerScore, opponentScore, eloChange, onMenu,
 }: GameEndScreenProps) {
   const t = useTranslations();
   const title = isWinner ? t('game.legendary') : t('game.flatlined');
@@ -81,15 +80,6 @@ export default function GameEndScreen({
 
         {/* Buttons */}
         <div className="flex gap-4">
-          {onReplay && (
-            <button
-              className="font-blender text-xs uppercase tracking-widest px-6 py-3 rounded cursor-pointer transition-all"
-              style={{ background: '#111119', border: `1px solid ${color}`, color }}
-              onClick={onReplay}
-            >
-              {t('game.watchReplay')}
-            </button>
-          )}
           <button
             className="font-blender text-xs uppercase tracking-widest px-6 py-3 rounded cursor-pointer transition-all"
             style={{ background: '#111119', border: '1px solid #00f0ff', color: '#00f0ff' }}

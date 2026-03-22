@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslations, useLocale } from 'next-intl';
 import CyberBackground from '@/components/CyberBackground';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import CardFace from '@/components/cards/CardFace';
 import CardPreview from '@/components/cards/CardPreview';
-import { getAllCards } from '@/lib/data/cardLoader';
+import { getAllCards, getCardById } from '@/lib/data/cardLoader';
 import { validateDeck } from '@/lib/engine/rules/DeckValidation';
 import { calculateRAMLimits } from '@/lib/engine/rules/RAMValidation';
 import type { CardData, CardType, CardColor } from '@/lib/data/types';
@@ -30,6 +30,28 @@ export default function DeckBuilderPage() {
   const [typeFilter, setTypeFilter] = useState<CardType | 'all'>('all');
   const [colorFilter, setColorFilter] = useState<CardColor | 'all'>('all');
   const [previewCard, setPreviewCard] = useState<CardData | null>(null);
+  const [savedDecks, setSavedDecks] = useState<{ id: string; name: string; cardIds: string[]; legendIds: string[] }[]>([]);
+  const [editingDeckId, setEditingDeckId] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/decks')
+      .then((res) => res.ok ? res.json() : [])
+      .then((data) => { if (Array.isArray(data)) setSavedDecks(data); })
+      .catch(() => {});
+  }, []);
+
+  const loadDeck = (deck: { id: string; name: string; cardIds: string[]; legendIds: string[] }) => {
+    const loadedLegends = deck.legendIds
+      .map((id) => getCardById(id))
+      .filter((c): c is CardData => !!c);
+    const loadedCards = deck.cardIds
+      .map((id) => getCardById(id))
+      .filter((c): c is CardData => !!c);
+    setSelectedLegends(loadedLegends);
+    setSelectedCards(loadedCards);
+    setDeckName(deck.name);
+    setEditingDeckId(deck.id);
+  };
 
   const allCards = useMemo(() => getAllCards(), []);
   const legends = useMemo(() => allCards.filter((c) => c.card_type === 'legend'), [allCards]);
@@ -311,6 +333,54 @@ export default function DeckBuilderPage() {
           className="flex flex-col"
           style={{ width: '45%', padding: '32px 28px' }}
         >
+          {/* Saved Decks */}
+          {savedDecks.length > 0 && (
+            <div
+              style={{
+                marginBottom: 16,
+                padding: '16px 20px',
+                background: '#111119',
+                borderRadius: 10,
+                border: '1px solid #1e2030',
+              }}
+            >
+              <div
+                className="font-blender uppercase tracking-wider"
+                style={{ color: '#7a8a9a', fontSize: 12, marginBottom: 12 }}
+              >
+                {locale === 'fr' ? 'Decks sauvegard\u00e9s' : 'Saved Decks'}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {savedDecks.map((deck) => (
+                  <button
+                    key={deck.id}
+                    className="font-blender cursor-pointer"
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '10px 14px',
+                      borderRadius: 8,
+                      background: editingDeckId === deck.id ? '#1a1a25' : '#0a0a12',
+                      border: `1px solid ${editingDeckId === deck.id ? '#00f0ff' : '#1e2030'}`,
+                      color: editingDeckId === deck.id ? '#00f0ff' : '#e0e8f0',
+                      fontSize: 13,
+                      textAlign: 'left' as const,
+                      transition: 'all 0.2s',
+                      width: '100%',
+                    }}
+                    onClick={() => loadDeck(deck)}
+                  >
+                    <span>{deck.name}</span>
+                    <span style={{ color: '#7a8a9a', fontSize: 11 }}>
+                      {deck.cardIds.length} cards
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Deck name + save */}
           <div
             className="flex items-center"

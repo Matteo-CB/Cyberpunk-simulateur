@@ -17,7 +17,7 @@ export async function GET(
         wins: true,
         losses: true,
         draws: true,
-        tournamentWins: true,
+
         discordUsername: true,
         createdAt: true,
       },

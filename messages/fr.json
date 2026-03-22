@@ -6,7 +6,7 @@
     "collection": "COLLECTION",
     "deckBuilder": "CREATEUR DE DECK",
     "leaderboard": "CLASSEMENT",
-    "tournaments": "TOURNOIS",
+
     "settings": "PARAMETRES",
     "rules": "REGLES",
     "signIn": "Connexion",
@@ -47,7 +47,7 @@
     "mulligan": "Mulligan",
     "legendary": "LEGENDARY",
     "flatlined": "FLATLINED",
-    "watchReplay": "Voir le Replay",
+
     "backToMenu": "Retour au Menu",
     "streetCred": "Street Cred",
     "gigs": "Gigs",
@@ -294,20 +294,6 @@
     "draws": "N",
     "winRate": "% Victoires",
     "search": "Rechercher un joueur..."
-  },
-  "tournaments": {
-    "title": "TOURNOIS",
-    "subtitle": "Rivalisez pour la gloire",
-    "create": "Creer un Tournoi",
-    "join": "Rejoindre",
-    "leave": "Quitter",
-    "start": "Demarrer",
-    "bracket": "Tableau",
-    "participants": "Participants",
-    "status": "Statut",
-    "pending": "En attente",
-    "inProgress": "En cours",
-    "completed": "Termine"
   },
   "settings": {
     "title": "PARAMETRES",

@@ -12,10 +12,13 @@ const ADMIN_LINKS = [
 ];
 
 export default function AdminPage() {
-  const [stats, setStats] = useState({ users: 0, games: 0, tournaments: 0 });
+  const [stats, setStats] = useState({ users: 0, games: 0 });
 
   useEffect(() => {
-    // TODO: fetch admin stats
+    fetch('/api/admin/stats')
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => { if (data) setStats({ users: data.users, games: data.games }); })
+      .catch(() => {});
   }, []);
 
   return (
@@ -52,11 +55,10 @@ export default function AdminPage() {
         </div>
 
         {/* Stats Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 32 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, marginBottom: 32 }}>
           {[
             { label: 'Users', value: stats.users, color: '#00f0ff' },
             { label: 'Games', value: stats.games, color: '#22c55e' },
-            { label: 'Tournaments', value: stats.tournaments, color: '#fcee09' },
           ].map((stat, i) => (
             <motion.div
               key={stat.label}
