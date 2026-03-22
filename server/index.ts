@@ -1,0 +1,432 @@
+import express from 'express';
+import { createServer } from 'http';
+import { Server as SocketIOServer, Socket } from 'socket.io';
+import next from 'next';
+
+// ------------------------------------------------------------------
+// Configuration
+// ------------------------------------------------------------------
+
+const dev = process.env.NODE_ENV !== 'production';
+const port = parseInt(process.env.PORT || '3000', 10);
+const hostname = process.env.HOSTNAME || 'localhost';
+
+// CORS origins: allow localhost in dev plus the configured socket URL
+const allowedOrigins: string[] = [
+  `http://localhost:${port}`,
+  `http://localhost:3000`,
+  `http://${hostname}:${port}`,
+];
+if (process.env.NEXT_PUBLIC_SOCKET_URL) {
+  allowedOrigins.push(process.env.NEXT_PUBLIC_SOCKET_URL);
+}
+if (process.env.NEXT_PUBLIC_APP_URL) {
+  allowedOrigins.push(process.env.NEXT_PUBLIC_APP_URL);
+}
+
+// ------------------------------------------------------------------
+// Types
+// ------------------------------------------------------------------
+
+interface RoomData {
+  code: string;
+  hostId: string;
+  hostUsername: string;
+  guestId: string | null;
+  guestUsername: string | null;
+  spectators: string[];
+  gameState: unknown | null;
+  createdAt: number;
+}
+
+interface ChatPayload {
+  roomCode: string;
+  userId: string;
+  username: string;
+  message: string;
+  isEmote?: boolean;
+  isSpectator?: boolean;
+}
+
+interface GameActionPayload {
+  roomCode: string;
+  action: unknown;
+  player: 'player1' | 'player2';
+}
+
+interface GameStatePayload {
+  roomCode: string;
+  gameState: unknown;
+}
+
+// ------------------------------------------------------------------
+// In-memory room store
+// ------------------------------------------------------------------
+
+const rooms = new Map<string, RoomData>();
+const socketToRoom = new Map<string, string>();
+const socketToUser = new Map<string, { userId: string; username: string }>();
+
+// ------------------------------------------------------------------
+// Server Setup
+// ------------------------------------------------------------------
+
+async function startServer() {
+  const app = next({ dev, hostname, port });
+  const handle = app.getRequestHandler();
+
+  await app.prepare();
+
+  const expressApp = express();
+
+  // Parse JSON for API routes handled by Express
+  expressApp.use(express.json());
+
+  // Health check endpoint
+  expressApp.get('/api/health', (_req, res) => {
+    res.json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      rooms: rooms.size,
+      connections: io.engine.clientsCount,
+    });
+  });
+
+  // Delegate all other requests to Next.js
+  expressApp.all('*', (req, res) => {
+    return handle(req, res);
+  });
+
+  const httpServer = createServer(expressApp);
+
+  const io = new SocketIOServer(httpServer, {
+    cors: {
+      origin: allowedOrigins,
+      methods: ['GET', 'POST'],
+      credentials: true,
+    },
+    pingTimeout: 60000,
+    pingInterval: 25000,
+    transports: ['websocket', 'polling'],
+  });
+
+  // ----------------------------------------------------------------
+  // Socket.IO Event Handlers
+  // ----------------------------------------------------------------
+
+  io.on('connection', (socket: Socket) => {
+    console.log(`[socket] Client connected: ${socket.id}`);
+
+    // --- Authentication ---
+    socket.on(
+      'auth',
+      (data: { userId: string; username: string }, ack?: (res: { ok: boolean }) => void) => {
+        socketToUser.set(socket.id, {
+          userId: data.userId,
+          username: data.username,
+        });
+        if (ack) ack({ ok: true });
+      }
+    );
+
+    // --- Room: Create ---
+    socket.on(
+      'room:create',
+      (
+        data: {
+          roomCode: string;
+          userId: string;
+          username: string;
+          isPrivate?: boolean;
+        },
+        ack?: (res: { ok: boolean; error?: string }) => void
+      ) => {
+        const { roomCode, userId, username } = data;
+
+        if (rooms.has(roomCode)) {
+          if (ack) ack({ ok: false, error: 'Room already exists' });
+          return;
+        }
+
+        const room: RoomData = {
+          code: roomCode,
+          hostId: userId,
+          hostUsername: username,
+          guestId: null,
+          guestUsername: null,
+          spectators: [],
+          gameState: null,
+          createdAt: Date.now(),
+        };
+
+        rooms.set(roomCode, room);
+        socket.join(roomCode);
+        socketToRoom.set(socket.id, roomCode);
+        socketToUser.set(socket.id, { userId, username });
+
+        io.to(roomCode).emit('room:updated', room);
+        if (ack) ack({ ok: true });
+
+        console.log(`[socket] Room created: ${roomCode} by ${username}`);
+      }
+    );
+
+    // --- Room: Join ---
+    socket.on(
+      'room:join',
+      (
+        data: {
+          roomCode: string;
+          userId: string;
+          username: string;
+          asSpectator?: boolean;
+        },
+        ack?: (res: { ok: boolean; error?: string; room?: RoomData }) => void
+      ) => {
+        const { roomCode, userId, username, asSpectator } = data;
+        const room = rooms.get(roomCode);
+
+        if (!room) {
+          if (ack) ack({ ok: false, error: 'Room not found' });
+          return;
+        }
+
+        if (asSpectator) {
+          if (!room.spectators.includes(userId)) {
+            room.spectators.push(userId);
+          }
+          socket.join(roomCode);
+          socketToRoom.set(socket.id, roomCode);
+          socketToUser.set(socket.id, { userId, username });
+          io.to(roomCode).emit('room:updated', room);
+          if (ack) ack({ ok: true, room });
+          return;
+        }
+
+        // Join as player
+        if (room.guestId && room.guestId !== userId) {
+          if (ack) ack({ ok: false, error: 'Room is full' });
+          return;
+        }
+
+        // Allow rejoin
+        if (room.hostId === userId || room.guestId === userId) {
+          socket.join(roomCode);
+          socketToRoom.set(socket.id, roomCode);
+          socketToUser.set(socket.id, { userId, username });
+          io.to(roomCode).emit('room:updated', room);
+          if (ack) ack({ ok: true, room });
+          return;
+        }
+
+        room.guestId = userId;
+        room.guestUsername = username;
+        socket.join(roomCode);
+        socketToRoom.set(socket.id, roomCode);
+        socketToUser.set(socket.id, { userId, username });
+
+        io.to(roomCode).emit('room:updated', room);
+        io.to(roomCode).emit('room:player-joined', {
+          userId,
+          username,
+        });
+        if (ack) ack({ ok: true, room });
+
+        console.log(`[socket] ${username} joined room ${roomCode}`);
+      }
+    );
+
+    // --- Room: Leave ---
+    socket.on('room:leave', (data?: { roomCode?: string }) => {
+      const roomCode = data?.roomCode || socketToRoom.get(socket.id);
+      if (!roomCode) return;
+
+      handleLeaveRoom(socket, roomCode);
+    });
+
+    // --- Game: Action ---
+    socket.on(
+      'game:action',
+      (payload: GameActionPayload, ack?: (res: { ok: boolean }) => void) => {
+        const { roomCode, action, player } = payload;
+        const room = rooms.get(roomCode);
+        if (!room) {
+          if (ack) ack({ ok: false });
+          return;
+        }
+
+        // Broadcast action to all clients in the room (including sender for confirmation)
+        io.to(roomCode).emit('game:action-received', {
+          action,
+          player,
+          timestamp: Date.now(),
+        });
+
+        if (ack) ack({ ok: true });
+      }
+    );
+
+    // --- Game: State Update ---
+    socket.on('game:state-update', (payload: GameStatePayload) => {
+      const { roomCode, gameState } = payload;
+      const room = rooms.get(roomCode);
+      if (!room) return;
+
+      room.gameState = gameState;
+      // Broadcast to all other clients in the room
+      socket.to(roomCode).emit('game:state-update', {
+        gameState,
+        timestamp: Date.now(),
+      });
+    });
+
+    // --- Chat: Send ---
+    socket.on('chat:send', (payload: ChatPayload) => {
+      const { roomCode, userId, username, message, isEmote, isSpectator } =
+        payload;
+
+      // Basic validation
+      if (!message || message.trim().length === 0) return;
+      if (message.length > 500) return;
+
+      const chatMessage = {
+        id: `msg_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
+        roomCode,
+        userId,
+        username,
+        message: message.trim(),
+        isEmote: isEmote || false,
+        isSpectator: isSpectator || false,
+        timestamp: Date.now(),
+      };
+
+      // Broadcast to all clients in the room
+      io.to(roomCode).emit('chat:message', chatMessage);
+    });
+
+    // --- Disconnect ---
+    socket.on('disconnect', (reason) => {
+      console.log(
+        `[socket] Client disconnected: ${socket.id} (${reason})`
+      );
+
+      const roomCode = socketToRoom.get(socket.id);
+      if (roomCode) {
+        handleLeaveRoom(socket, roomCode);
+      }
+
+      socketToRoom.delete(socket.id);
+      socketToUser.delete(socket.id);
+    });
+  });
+
+  // ----------------------------------------------------------------
+  // Helper: Handle leaving a room
+  // ----------------------------------------------------------------
+
+  function handleLeaveRoom(socket: Socket, roomCode: string) {
+    const room = rooms.get(roomCode);
+    if (!room) return;
+
+    const user = socketToUser.get(socket.id);
+    socket.leave(roomCode);
+    socketToRoom.delete(socket.id);
+
+    if (user) {
+      // Remove from spectators
+      room.spectators = room.spectators.filter((id) => id !== user.userId);
+
+      // If the guest leaves
+      if (room.guestId === user.userId) {
+        room.guestId = null;
+        room.guestUsername = null;
+        io.to(roomCode).emit('room:player-left', {
+          userId: user.userId,
+          username: user.username,
+        });
+      }
+
+      // If the host leaves, close the room
+      if (room.hostId === user.userId) {
+        io.to(roomCode).emit('room:closed', {
+          reason: 'Host left the room',
+        });
+        rooms.delete(roomCode);
+        console.log(
+          `[socket] Room ${roomCode} closed (host ${user.username} left)`
+        );
+        return;
+      }
+    }
+
+    io.to(roomCode).emit('room:updated', room);
+  }
+
+  // ----------------------------------------------------------------
+  // Periodic cleanup of stale rooms (older than 4 hours)
+  // ----------------------------------------------------------------
+
+  const ROOM_TTL_MS = 4 * 60 * 60 * 1000;
+
+  setInterval(() => {
+    const now = Date.now();
+    for (const [code, room] of rooms.entries()) {
+      if (now - room.createdAt > ROOM_TTL_MS) {
+        io.to(code).emit('room:closed', { reason: 'Room expired' });
+        rooms.delete(code);
+        console.log(`[socket] Stale room cleaned up: ${code}`);
+      }
+    }
+  }, 60 * 1000);
+
+  // ----------------------------------------------------------------
+  // Start HTTP Server
+  // ----------------------------------------------------------------
+
+  httpServer.listen(port, () => {
+    console.log(
+      `> Cyberpunk TCG Simulator server ready on http://${hostname}:${port}`
+    );
+    console.log(`> Environment: ${dev ? 'development' : 'production'}`);
+  });
+
+  // ----------------------------------------------------------------
+  // Graceful Shutdown
+  // ----------------------------------------------------------------
+
+  function gracefulShutdown(signal: string) {
+    console.log(`\n[server] Received ${signal}. Shutting down gracefully...`);
+
+    // Notify all connected clients
+    io.emit('server:shutdown', {
+      message: 'Server is restarting. Please reconnect.',
+    });
+
+    // Close Socket.IO
+    io.close(() => {
+      console.log('[server] Socket.IO connections closed');
+    });
+
+    // Close HTTP server
+    httpServer.close(() => {
+      console.log('[server] HTTP server closed');
+      process.exit(0);
+    });
+
+    // Force exit after 10 seconds
+    setTimeout(() => {
+      console.error('[server] Forced shutdown after timeout');
+      process.exit(1);
+    }, 10000);
+  }
+
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+}
+
+// Start the server
+startServer().catch((error) => {
+  console.error('[server] Failed to start:', error);
+  process.exit(1);
+});

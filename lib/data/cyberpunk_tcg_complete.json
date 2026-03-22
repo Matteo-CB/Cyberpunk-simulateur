@@ -1,0 +1,1358 @@
+{
+  "sets": {
+    "alpha": {
+      "code": "alpha",
+      "name_en": "Alpha Kit Set",
+      "name_fr": "Set Alpha Kit"
+    },
+    "spoiler": {
+      "code": "spoiler",
+      "name_en": "Spoiler Set",
+      "name_fr": "Set Spoiler"
+    },
+    "promo": {
+      "code": "promo",
+      "name_en": "Promo Cards",
+      "name_fr": "Cartes Promo"
+    }
+  },
+  "cards": {
+    "a001": {
+      "id": "a001",
+      "print_number": "α001",
+      "set": "alpha",
+      "card_type": "legend",
+      "color": "red",
+      "name_en": "Yorinobu Arasaka",
+      "name_fr": "Yorinobu Arasaka",
+      "title_en": "Embracing Destruction",
+      "title_fr": "Étreinte de la Destruction",
+      "cost": null,
+      "power": 0,
+      "ram": 2,
+      "classifications": [
+        "Arasaka",
+        "Corpo"
+      ],
+      "keywords": [],
+      "effects": [
+        {
+          "type": "PASSIVE",
+          "description_en": "The first time a friendly Arasaka unit attacks each turn, draw a card. Then, if you have less than 20 Street Cred, discard 1 card from your hand to your trash.",
+          "description_fr": "La première fois qu'une unité Arasaka alliée attaque chaque tour, piochez une carte. Ensuite, si vous avez moins de 20 Crédits de Rue, défaussez 1 carte de votre main vers votre défausse."
+        }
+      ],
+      "image_file": "images/cards/alpha/a001.webp",
+      "data_complete": true,
+      "sell_tag": true
+    },
+    "a002": {
+      "id": "a002",
+      "print_number": "α002",
+      "set": "alpha",
+      "card_type": "legend",
+      "color": "blue",
+      "name_en": "Jackie Welles",
+      "name_fr": "Jackie Welles",
+      "title_en": "Pour One Out For Me",
+      "title_fr": "Verse-en Un Pour Moi",
+      "cost": null,
+      "power": 0,
+      "ram": 2,
+      "classifications": [
+        "Merc"
+      ],
+      "keywords": [],
+      "effects": [
+        {
+          "type": "PASSIVE",
+          "description_en": "The first time you play a blue unit or blue gear each turn, you may increase a friendly gig by 2. Then, if it's at max value, draw a card.",
+          "description_fr": "La première fois que vous jouez une unité bleue ou un équipement bleu chaque tour, vous pouvez augmenter un contrat allié de 2. Ensuite, s'il est à sa valeur max, piochez une carte."
+        }
+      ],
+      "image_file": "images/cards/alpha/a002.webp",
+      "data_complete": true,
+      "sell_tag": true
+    },
+    "a003": {
+      "id": "a003",
+      "print_number": "α003",
+      "set": "alpha",
+      "card_type": "legend",
+      "color": "blue",
+      "name_en": "V",
+      "name_fr": "V",
+      "title_en": "Corporate Exile",
+      "title_fr": "Exilé Corporatif",
+      "cost": 5,
+      "power": 8,
+      "ram": 2,
+      "classifications": [
+        "Merc",
+        "Corpo"
+      ],
+      "keywords": [
+        "Go Solo"
+      ],
+      "effects": [
+        {
+          "type": "GO_SOLO",
+          "description_en": "GO SOLO (Pay this card's cost to play it as a ready unit. It can attack this turn.)",
+          "description_fr": "EN SOLO (Payez le coût de cette carte pour la jouer comme unité prête. Elle peut attaquer ce tour.)"
+        }
+      ],
+      "image_file": "images/cards/alpha/a003.webp",
+      "data_complete": true,
+      "sell_tag": true
+    },
+    "a004": {
+      "id": "a004",
+      "print_number": "α004",
+      "set": "alpha",
+      "card_type": "legend",
+      "color": "green",
+      "name_en": "Goro Takemura",
+      "name_fr": "Goro Takemura",
+      "title_en": "Hands Unclean",
+      "title_fr": "Les Mains Sales",
+      "cost": 5,
+      "power": 7,
+      "ram": 2,
+      "classifications": [
+        "Arasaka",
+        "Corpo"
+      ],
+      "keywords": [
+        "Go Solo",
+        "Blocker"
+      ],
+      "effects": [
+        {
+          "type": "GO_SOLO",
+          "description_en": "GO SOLO (Pay this card's cost to play it as a ready unit. It can attack this turn.) BLOCKER (When a rival unit attacks, you may spend this unit to redirect the attack to it.)",
+          "description_fr": "EN SOLO (Payez le coût de cette carte pour la jouer comme unité prête. Elle peut attaquer ce tour.) BLOQUEUR (Quand une unité rivale attaque, vous pouvez épuiser cette unité pour rediriger l'attaque vers elle.)"
+        }
+      ],
+      "image_file": "images/cards/alpha/a004.webp",
+      "data_complete": true,
+      "sell_tag": true
+    },
+    "a005": {
+      "id": "a005",
+      "print_number": "α005",
+      "set": "alpha",
+      "card_type": "legend",
+      "color": "green",
+      "name_en": "Saburo Arasaka",
+      "name_fr": "Saburo Arasaka",
+      "title_en": "Stubborn Patriarch",
+      "title_fr": "Patriarche Obstiné",
+      "cost": null,
+      "power": 0,
+      "ram": 2,
+      "classifications": [
+        "Arasaka",
+        "Corpo"
+      ],
+      "keywords": [],
+      "effects": [
+        {
+          "type": "PASSIVE",
+          "description_en": "Your Arasaka units have +1 power when attacking.",
+          "description_fr": "Vos unités Arasaka ont +1 de puissance lorsqu'elles attaquent."
+        }
+      ],
+      "image_file": "images/cards/alpha/a005.webp",
+      "data_complete": true,
+      "sell_tag": true
+    },
+    "a006": {
+      "id": "a006",
+      "print_number": "α006",
+      "set": "alpha",
+      "card_type": "legend",
+      "color": "yellow",
+      "name_en": "Viktor Vektor",
+      "name_fr": "Viktor Vektor",
+      "title_en": "Sit Down and Relax",
+      "title_fr": "Assieds-toi et Détends-toi",
+      "cost": null,
+      "power": 0,
+      "ram": 2,
+      "classifications": [
+        "Ripperdoc",
+        "Merc"
+      ],
+      "keywords": [
+        "Flip"
+      ],
+      "effects": [
+        {
+          "type": "FLIP",
+          "description_en": "FLIP Search the top 5 cards of your deck for up to 2 gear that costs 2 or less each. Reveal them and add them to your hand. (Place the other cards on the bottom of your deck in a random order.)",
+          "description_fr": "RETOURNER Cherchez dans les 5 premières cartes de votre deck jusqu'à 2 équipements coûtant 2 ou moins chacun. Révélez-les et ajoutez-les à votre main. (Placez les autres cartes sous votre deck dans un ordre aléatoire.)"
+        }
+      ],
+      "image_file": "images/cards/alpha/a006.webp",
+      "data_complete": true,
+      "sell_tag": true
+    },
+    "a007": {
+      "id": "a007",
+      "print_number": "α007",
+      "set": "alpha",
+      "card_type": "unit",
+      "color": "red",
+      "name_en": "Armored Minotaur",
+      "name_fr": "Minotaure Blindé",
+      "title_en": "",
+      "title_fr": "",
+      "cost": 6,
+      "power": 9,
+      "ram": 4,
+      "classifications": [
+        "Arasaka",
+        "Militech",
+        "Drone"
+      ],
+      "keywords": [
+        "Play"
+      ],
+      "effects": [
+        {
+          "type": "PLAY",
+          "description_en": "PLAY If you have 12+ Street Cred, defeat a rival unit with power 5 or less.",
+          "description_fr": "JOUER Si vous avez 12+ Crédits de Rue, détruisez une unité rivale avec 5 de puissance ou moins."
+        }
+      ],
+      "image_file": "images/cards/alpha/a007.webp",
+      "data_complete": true,
+      "sell_tag": false
+    },
+    "a008": {
+      "id": "a008",
+      "print_number": "α008",
+      "set": "alpha",
+      "card_type": "unit",
+      "color": "red",
+      "name_en": "Ruthless Lowlife",
+      "name_fr": "Voyou Impitoyable",
+      "title_en": "",
+      "title_fr": "",
+      "cost": 2,
+      "power": 1,
+      "ram": 1,
+      "classifications": [
+        "Arasaka",
+        "Merc"
+      ],
+      "keywords": [],
+      "effects": [
+        {
+          "type": "PASSIVE",
+          "description_en": "When a rival steals one or more friendly gigs, if this unit is spent, the value of those gigs becomes 1.",
+          "description_fr": "Quand un rival vole un ou plusieurs contrats alliés, si cette unité est épuisée, la valeur de ces contrats devient 1."
+        }
+      ],
+      "image_file": "images/cards/alpha/a008.webp",
+      "data_complete": true,
+      "sell_tag": false
+    },
+    "a009": {
+      "id": "a009",
+      "print_number": "α009",
+      "set": "alpha",
+      "card_type": "unit",
+      "color": "red",
+      "name_en": "Swordwise Hustle",
+      "name_fr": "Bretteur Rusé",
+      "title_en": "",
+      "title_fr": "",
+      "cost": 3,
+      "power": 5,
+      "ram": 1,
+      "classifications": [
+        "Arasaka",
+        "Merc"
+      ],
+      "keywords": [],
+      "effects": [],
+      "image_file": "images/cards/alpha/a009.webp",
+      "data_complete": true,
+      "sell_tag": false
+    },
+    "a010": {
+      "id": "a010",
+      "print_number": "α010",
+      "set": "alpha",
+      "card_type": "unit",
+      "color": "blue",
+      "name_en": "Delamain Cab",
+      "name_fr": "Taxi Delamain",
+      "title_en": "",
+      "title_fr": "",
+      "cost": 4,
+      "power": 7,
+      "ram": 3,
+      "classifications": [
+        "Vehicle"
+      ],
+      "keywords": [],
+      "effects": [],
+      "image_file": "images/cards/alpha/a010.webp",
+      "data_complete": true,
+      "sell_tag": false
+    },
+    "a011": {
+      "id": "a011",
+      "print_number": "α011",
+      "set": "alpha",
+      "card_type": "unit",
+      "color": "blue",
+      "name_en": "Evelyn Parker",
+      "name_fr": "Evelyn Parker",
+      "title_en": "Scheming Siren",
+      "title_fr": "Sirène Intrigante",
+      "cost": 2,
+      "power": 1,
+      "ram": 1,
+      "classifications": [
+        "Doll"
+      ],
+      "keywords": [],
+      "effects": [
+        {
+          "type": "PASSIVE",
+          "description_en": "When a rival steals one or more friendly gigs, if this unit is spent, draw a card.",
+          "description_fr": "Quand un rival vole un ou plusieurs contrats alliés, si cette unité est épuisée, piochez une carte."
+        }
+      ],
+      "image_file": "images/cards/alpha/a011.webp",
+      "data_complete": true,
+      "sell_tag": false
+    },
+    "a012": {
+      "id": "a012",
+      "print_number": "α012",
+      "set": "alpha",
+      "card_type": "unit",
+      "color": "blue",
+      "name_en": "MT0D12 Flathead",
+      "name_fr": "MT0D12 Flathead",
+      "title_en": "",
+      "title_fr": "",
+      "cost": 5,
+      "power": 5,
+      "ram": 3,
+      "classifications": [
+        "Militech",
+        "Drone"
+      ],
+      "keywords": [],
+      "effects": [
+        {
+          "type": "PASSIVE",
+          "description_en": "If you have 7+ Street Cred, this unit can't be blocked.",
+          "description_fr": "Si vous avez 7+ Crédits de Rue, cette unité ne peut pas être bloquée."
+        }
+      ],
+      "image_file": "images/cards/alpha/a012.webp",
+      "data_complete": true,
+      "sell_tag": false
+    },
+    "a013": {
+      "id": "a013",
+      "print_number": "α013",
+      "set": "alpha",
+      "card_type": "unit",
+      "color": "yellow",
+      "name_en": "Jackie Welles",
+      "name_fr": "Jackie Welles",
+      "title_en": "Ride Or Die Choom",
+      "title_fr": "À la Vie à la Mort Choom",
+      "cost": 6,
+      "power": 6,
+      "ram": 3,
+      "classifications": [
+        "Merc"
+      ],
+      "keywords": [],
+      "effects": [
+        {
+          "type": "PASSIVE",
+          "description_en": "This unit has +2 power for each of your friendly gigs. (Units steal an extra gig for every 10 power.)",
+          "description_fr": "Cette unité a +2 de puissance pour chacun de vos contrats alliés. (Les unités volent un contrat supplémentaire pour chaque 10 de puissance.)"
+        }
+      ],
+      "image_file": "images/cards/alpha/a013.webp",
+      "data_complete": true,
+      "sell_tag": false
+    },
+    "a014": {
+      "id": "a014",
+      "print_number": "α014",
+      "set": "alpha",
+      "card_type": "unit",
+      "color": "yellow",
+      "name_en": "Secondhand Bombus",
+      "name_fr": "Bombus d'Occasion",
+      "title_en": "",
+      "title_fr": "",
+      "cost": 2,
+      "power": 2,
+      "ram": 1,
+      "classifications": [
+        "Zetatech",
+        "Drone"
+      ],
+      "keywords": [
+        "Blocker"
+      ],
+      "effects": [
+        {
+          "type": "PASSIVE",
+          "description_en": "This unit can't attack. BLOCKER (When a rival unit attacks, you may spend this unit to redirect the attack to it.)",
+          "description_fr": "Cette unité ne peut pas attaquer. BLOQUEUR (Quand une unité rivale attaque, vous pouvez épuiser cette unité pour rediriger l'attaque vers elle.)"
+        }
+      ],
+      "image_file": "images/cards/alpha/a014.webp",
+      "data_complete": true,
+      "sell_tag": false
+    },
+    "a015": {
+      "id": "a015",
+      "print_number": "α015",
+      "set": "alpha",
+      "card_type": "unit",
+      "color": "yellow",
+      "name_en": "T-Bug",
+      "name_fr": "T-Bug",
+      "title_en": "Amateur Philosopher",
+      "title_fr": "Philosophe Amateur",
+      "cost": 3,
+      "power": 5,
+      "ram": 1,
+      "classifications": [
+        "Netrunner",
+        "Merc"
+      ],
+      "keywords": [],
+      "effects": [],
+      "image_file": "images/cards/alpha/a015.webp",
+      "data_complete": true,
+      "sell_tag": false
+    },
+    "a016": {
+      "id": "a016",
+      "print_number": "α016",
+      "set": "alpha",
+      "card_type": "unit",
+      "color": "green",
+      "name_en": "Corpo Security",
+      "name_fr": "Sécurité Corpo",
+      "title_en": "",
+      "title_fr": "",
+      "cost": 2,
+      "power": 2,
+      "ram": 2,
+      "classifications": [
+        "Corpo"
+      ],
+      "keywords": [
+        "Blocker"
+      ],
+      "effects": [
+        {
+          "type": "PASSIVE",
+          "description_en": "This unit can't attack. BLOCKER (When a rival unit attacks, you may spend this unit to redirect the attack to it.)",
+          "description_fr": "Cette unité ne peut pas attaquer. BLOQUEUR (Quand une unité rivale attaque, vous pouvez épuiser cette unité pour rediriger l'attaque vers elle.)"
+        }
+      ],
+      "image_file": "images/cards/alpha/a016.webp",
+      "data_complete": true,
+      "sell_tag": false
+    },
+    "a017": {
+      "id": "a017",
+      "print_number": "α017",
+      "set": "alpha",
+      "card_type": "unit",
+      "color": "green",
+      "name_en": "Emergency Atlus",
+      "name_fr": "Atlus d'Urgence",
+      "title_en": "",
+      "title_fr": "",
+      "cost": 4,
+      "power": 7,
+      "ram": 3,
+      "classifications": [
+        "Vehicle",
+        "Corpo"
+      ],
+      "keywords": [],
+      "effects": [],
+      "image_file": "images/cards/alpha/a017.webp",
+      "data_complete": true,
+      "sell_tag": false
+    },
+    "a018": {
+      "id": "a018",
+      "print_number": "α018",
+      "set": "alpha",
+      "card_type": "unit",
+      "color": "green",
+      "name_en": "Goro Takemura",
+      "name_fr": "Goro Takemura",
+      "title_en": "Losing His Way",
+      "title_fr": "Perdant Son Chemin",
+      "cost": 4,
+      "power": 5,
+      "ram": 3,
+      "classifications": [
+        "Arasaka",
+        "Corpo"
+      ],
+      "keywords": [],
+      "effects": [
+        {
+          "type": "PASSIVE",
+          "description_en": "This unit has +1 power during your turn for each face-up legend in your legends area.",
+          "description_fr": "Cette unité a +1 de puissance pendant votre tour pour chaque légende face visible dans votre zone de légendes."
+        }
+      ],
+      "image_file": "images/cards/alpha/a018.webp",
+      "data_complete": true,
+      "sell_tag": false
+    },
+    "a019": {
+      "id": "a019",
+      "print_number": "α019",
+      "set": "alpha",
+      "card_type": "gear",
+      "color": "red",
+      "name_en": "Mantis Blades",
+      "name_fr": "Lames de Mante",
+      "title_en": "",
+      "title_fr": "",
+      "cost": 1,
+      "power": 2,
+      "ram": 1,
+      "classifications": [
+        "Cyberware"
+      ],
+      "keywords": [],
+      "effects": [
+        {
+          "type": "PASSIVE",
+          "description_en": "(Equip to a unit or face-up legend.)",
+          "description_fr": "(Équiper à une unité ou une légende face visible.)"
+        }
+      ],
+      "image_file": "images/cards/alpha/a019.webp",
+      "data_complete": true,
+      "sell_tag": true
+    },
+    "a020": {
+      "id": "a020",
+      "print_number": "α020",
+      "set": "alpha",
+      "card_type": "gear",
+      "color": "red",
+      "name_en": "Satori",
+      "name_fr": "Satori",
+      "title_en": "Sword of Saburo",
+      "title_fr": "Épée de Saburo",
+      "cost": 2,
+      "power": 1,
+      "ram": 2,
+      "classifications": [
+        "Weapon",
+        "Arasaka"
+      ],
+      "keywords": [
+        "Attack"
+      ],
+      "effects": [
+        {
+          "type": "ATTACK",
+          "description_en": "(Equip to a unit or face-up legend.) ATTACK If this unit wins a fight against a rival unit, draw a card.",
+          "description_fr": "(Équiper à une unité ou une légende face visible.) ATTAQUE Si cette unité gagne un combat contre une unité rivale, piochez une carte."
+        }
+      ],
+      "image_file": "images/cards/alpha/a020.webp",
+      "data_complete": true,
+      "sell_tag": true
+    },
+    "a021": {
+      "id": "a021",
+      "print_number": "α021",
+      "set": "alpha",
+      "card_type": "program",
+      "color": "red",
+      "name_en": "Industrial Assembly",
+      "name_fr": "Assemblage Industriel",
+      "title_en": "",
+      "title_fr": "",
+      "cost": 2,
+      "power": null,
+      "ram": 1,
+      "classifications": [
+        "Plan",
+        "Arasaka"
+      ],
+      "keywords": [],
+      "effects": [
+        {
+          "type": "PLAY",
+          "description_en": "Increase a friendly gig by 4. Then, if you have 7+ Street Cred, draw a card. (Discard programs after they resolve.)",
+          "description_fr": "Augmentez un contrat allié de 4. Ensuite, si vous avez 7+ Crédits de Rue, piochez une carte. (Défaussez les programmes après leur résolution.)"
+        }
+      ],
+      "image_file": "images/cards/alpha/a021.webp",
+      "data_complete": true,
+      "sell_tag": true
+    },
+    "a022": {
+      "id": "a022",
+      "print_number": "α022",
+      "set": "alpha",
+      "card_type": "gear",
+      "color": "blue",
+      "name_en": "Dying Night",
+      "name_fr": "Dying Night",
+      "title_en": "V's Pistol",
+      "title_fr": "Le Pistolet de V",
+      "cost": 2,
+      "power": 2,
+      "ram": 3,
+      "classifications": [
+        "Weapon",
+        "Merc"
+      ],
+      "keywords": [
+        "Attack"
+      ],
+      "effects": [
+        {
+          "type": "ATTACK",
+          "description_en": "(Equip to a unit or face-up legend.) ATTACK If you have 7+ Street Cred, defeat a rival gear card that costs 2 or less.",
+          "description_fr": "(Équiper à une unité ou une légende face visible.) ATTAQUE Si vous avez 7+ Crédits de Rue, détruisez un équipement rival coûtant 2 ou moins."
+        }
+      ],
+      "image_file": "images/cards/alpha/a022.webp",
+      "data_complete": true,
+      "sell_tag": true
+    },
+    "a023": {
+      "id": "a023",
+      "print_number": "α023",
+      "set": "alpha",
+      "card_type": "program",
+      "color": "blue",
+      "name_en": "Floor It",
+      "name_fr": "Appuie sur le Champignon",
+      "title_en": "",
+      "title_fr": "",
+      "cost": 3,
+      "power": null,
+      "ram": 2,
+      "classifications": [
+        "Plan",
+        "Merc"
+      ],
+      "keywords": [],
+      "effects": [
+        {
+          "type": "PLAY",
+          "description_en": "Return a spent unit with cost 4 or less to its owner's hand. (Discard programs after they resolve.)",
+          "description_fr": "Renvoyez une unité épuisée coûtant 4 ou moins dans la main de son propriétaire. (Défaussez les programmes après leur résolution.)"
+        }
+      ],
+      "image_file": "images/cards/alpha/a023.webp",
+      "data_complete": true,
+      "sell_tag": true
+    },
+    "a024": {
+      "id": "a024",
+      "print_number": "α024",
+      "set": "alpha",
+      "card_type": "gear",
+      "color": "green",
+      "name_en": "Sandevistan",
+      "name_fr": "Sandevistan",
+      "title_en": "",
+      "title_fr": "",
+      "cost": 3,
+      "power": 3,
+      "ram": 4,
+      "classifications": [
+        "Cyberware"
+      ],
+      "keywords": [
+        "Play"
+      ],
+      "effects": [
+        {
+          "type": "PLAY",
+          "description_en": "(Equip to a unit or face-up legend.) PLAY This unit can attack spent units this turn.",
+          "description_fr": "(Équiper à une unité ou une légende face visible.) JOUER Cette unité peut attaquer les unités épuisées ce tour."
+        }
+      ],
+      "image_file": "images/cards/alpha/a024.webp",
+      "data_complete": true,
+      "sell_tag": true
+    },
+    "a025": {
+      "id": "a025",
+      "print_number": "α025",
+      "set": "alpha",
+      "card_type": "program",
+      "color": "green",
+      "name_en": "Corporate Surveillance",
+      "name_fr": "Surveillance Corporatiste",
+      "title_en": "",
+      "title_fr": "",
+      "cost": 2,
+      "power": null,
+      "ram": 2,
+      "classifications": [],
+      "keywords": [],
+      "effects": [
+        {
+          "type": "PLAY",
+          "description_en": "Spend a rival unit with cost 3 or less. (Discard programs after they resolve.)",
+          "description_fr": "Épuisez une unité rivale coûtant 3 ou moins. (Défaussez les programmes après leur résolution.)"
+        }
+      ],
+      "image_file": "images/cards/alpha/a025.webp",
+      "data_complete": true,
+      "sell_tag": true
+    },
+    "a026": {
+      "id": "a026",
+      "print_number": "α026",
+      "set": "alpha",
+      "card_type": "gear",
+      "color": "yellow",
+      "name_en": "Kiroshi Optics",
+      "name_fr": "Optiques Kiroshi",
+      "title_en": "",
+      "title_fr": "",
+      "cost": 1,
+      "power": 1,
+      "ram": 1,
+      "classifications": [
+        "Cyberware",
+        "Implant"
+      ],
+      "keywords": [
+        "Attack"
+      ],
+      "effects": [
+        {
+          "type": "ATTACK",
+          "description_en": "(Equip to a unit or face-up legend.) ATTACK Look at a friendly face-down legend without revealing it.",
+          "description_fr": "(Équiper à une unité ou une légende face visible.) ATTAQUE Regardez une légende alliée face cachée sans la révéler."
+        }
+      ],
+      "image_file": "images/cards/alpha/a026.webp",
+      "data_complete": true,
+      "sell_tag": true
+    },
+    "a027": {
+      "id": "a027",
+      "print_number": "α027",
+      "set": "alpha",
+      "card_type": "gear",
+      "color": "yellow",
+      "name_en": "Mandibular Upgrade",
+      "name_fr": "Amélioration Mandibulaire",
+      "title_en": "",
+      "title_fr": "",
+      "cost": 1,
+      "power": 0,
+      "ram": 2,
+      "classifications": [
+        "Cyberware",
+        "Implant"
+      ],
+      "keywords": [
+        "Blocker"
+      ],
+      "effects": [
+        {
+          "type": "BLOCKER",
+          "description_en": "(Equip to a unit or face-up legend.) BLOCKER (When a rival unit attacks, you may spend this unit to redirect the attack to it.)",
+          "description_fr": "(Équiper à une unité ou une légende face visible.) BLOQUEUR (Quand une unité rivale attaque, vous pouvez épuiser cette unité pour rediriger l'attaque vers elle.)"
+        }
+      ],
+      "image_file": "images/cards/alpha/a027.webp",
+      "data_complete": true,
+      "sell_tag": true
+    },
+    "a028": {
+      "id": "a028",
+      "print_number": "α028",
+      "set": "alpha",
+      "card_type": "program",
+      "color": "yellow",
+      "name_en": "Reboot Optics",
+      "name_fr": "Réinitialisation Optique",
+      "title_en": "",
+      "title_fr": "",
+      "cost": 2,
+      "power": null,
+      "ram": 2,
+      "classifications": [
+        "Tech"
+      ],
+      "keywords": [],
+      "effects": [
+        {
+          "type": "PLAY",
+          "description_en": "Give a friendly unit +4 power this turn. Defeat it at the end of the turn. (Discard programs after they resolve.)",
+          "description_fr": "Donnez à une unité alliée +4 de puissance ce tour. Détruisez-la à la fin du tour. (Défaussez les programmes après leur résolution.)"
+        }
+      ],
+      "image_file": "images/cards/alpha/a028.webp",
+      "data_complete": true,
+      "sell_tag": true
+    },
+    "b032": {
+      "id": "b032",
+      "print_number": "032",
+      "set": "spoiler",
+      "card_type": "legend",
+      "color": "green",
+      "name_en": "Panam Palmer",
+      "name_fr": "Panam Palmer",
+      "title_en": "Monad Cavalry",
+      "title_fr": "Cavalerie Monade",
+      "cost": null,
+      "power": 0,
+      "ram": 2,
+      "classifications": [
+        "Aldecaso",
+        "Merc",
+        "Nomad"
+      ],
+      "keywords": [
+        "Call"
+      ],
+      "effects": [
+        {
+          "type": "CALL",
+          "description_en": "CALL Ready this Legend. When a friendly Unit attacks, [Spend]: Choose a Gear from this Legend and equip it to that Unit. If you do, ready that Unit.",
+          "description_fr": "APPEL Préparez cette Légende. Quand une unité alliée attaque, [Épuiser] : Choisissez un Équipement de cette Légende et équipez-le à cette unité. Si vous le faites, préparez cette unité."
+        }
+      ],
+      "image_file": "images/cards/spoiler/b032.webp",
+      "data_complete": true,
+      "sell_tag": true
+    },
+    "b042": {
+      "id": "b042",
+      "print_number": "042",
+      "set": "spoiler",
+      "card_type": "unit",
+      "color": "green",
+      "name_en": "Riding Nomad",
+      "name_fr": "Nomade Cavalier",
+      "title_en": "",
+      "title_fr": "",
+      "cost": 6,
+      "power": 6,
+      "ram": 3,
+      "classifications": [
+        "Nomad"
+      ],
+      "keywords": [],
+      "effects": [
+        {
+          "type": "PASSIVE",
+          "description_en": "This Unit can attack spent rival Units the turn it's played.",
+          "description_fr": "Cette unité peut attaquer les unités rivales épuisées le tour où elle est jouée."
+        }
+      ],
+      "image_file": "images/cards/spoiler/b042.webp",
+      "data_complete": true,
+      "sell_tag": false
+    },
+    "b067": {
+      "id": "b067",
+      "print_number": "067",
+      "set": "spoiler",
+      "card_type": "unit",
+      "color": "red",
+      "name_en": "Kerry Eurodyne",
+      "name_fr": "Kerry Eurodyne",
+      "title_en": "The Last Rockerboy",
+      "title_fr": "Le Dernier Rockerboy",
+      "cost": 4,
+      "power": 3,
+      "ram": 2,
+      "classifications": [
+        "Rockerboy",
+        "Samurai"
+      ],
+      "keywords": [],
+      "effects": [
+        {
+          "type": "SPEND",
+          "description_en": "[Spend]: If you have a Gig at max value, draw 2 cards.",
+          "description_fr": "[Épuiser] : Si vous avez un contrat à valeur max, piochez 2 cartes."
+        }
+      ],
+      "image_file": "images/cards/spoiler/b067.webp",
+      "data_complete": true,
+      "sell_tag": false
+    },
+    "b069": {
+      "id": "b069",
+      "print_number": "069",
+      "set": "spoiler",
+      "card_type": "unit",
+      "color": "red",
+      "name_en": "Meredith Stout",
+      "name_fr": "Meredith Stout",
+      "title_en": "Stone Cold Corpo",
+      "title_fr": "Corpo de Marbre",
+      "cost": 4,
+      "power": 3,
+      "ram": 2,
+      "classifications": [
+        "Corpo",
+        "Militech"
+      ],
+      "keywords": [],
+      "effects": [
+        {
+          "type": "PASSIVE",
+          "description_en": "When a rival decreases the value of 1 or more friendly Gigs, you may choose a card from your trash and add it to your hand.",
+          "description_fr": "Quand un rival diminue la valeur de 1 ou plusieurs contrats alliés, vous pouvez choisir une carte de votre défausse et l'ajouter à votre main."
+        }
+      ],
+      "image_file": "images/cards/spoiler/b069.webp",
+      "data_complete": true,
+      "sell_tag": false
+    },
+    "b073": {
+      "id": "b073",
+      "print_number": "073",
+      "set": "spoiler",
+      "card_type": "unit",
+      "color": "blue",
+      "name_en": "Placide",
+      "name_fr": "Placide",
+      "title_en": "Voodoo Sentinel",
+      "title_fr": "Sentinelle Vaudou",
+      "cost": 8,
+      "power": 10,
+      "ram": 2,
+      "classifications": [
+        "Ganger",
+        "Netrunner",
+        "Voodoo Boys"
+      ],
+      "keywords": [
+        "Play",
+        "Attack"
+      ],
+      "effects": [
+        {
+          "type": "PLAY_ATTACK",
+          "description_en": "PLAY ATTACK You may discard a Program from your hand. If you do, bottom-deck a rival Unit.",
+          "description_fr": "JOUER ATTAQUE Vous pouvez défausser un Programme de votre main. Si vous le faites, placez une unité rivale sous son deck."
+        }
+      ],
+      "image_file": "images/cards/spoiler/b073.webp",
+      "data_complete": true,
+      "sell_tag": false
+    },
+    "b102": {
+      "id": "b102",
+      "print_number": "102",
+      "set": "spoiler",
+      "card_type": "program",
+      "color": "yellow",
+      "name_en": "Cyberpsychosis",
+      "name_fr": "Cyberpsychose",
+      "title_en": "",
+      "title_fr": "",
+      "cost": 2,
+      "power": null,
+      "ram": 3,
+      "classifications": [
+        "Quickhack"
+      ],
+      "keywords": [],
+      "effects": [
+        {
+          "type": "PLAY",
+          "description_en": "You may also play this Program when a Unit attacks by paying this card's cost and spending a friendly Unit or face-up Legend. Give an equipped Unit +2 power this turn for each of its equipped Gear. Defeat the Unit at the end of this turn.",
+          "description_fr": "Vous pouvez aussi jouer ce Programme quand une unité attaque en payant le coût de cette carte et en épuisant une unité alliée ou une légende face visible. Donnez à une unité équipée +2 de puissance ce tour pour chacun de ses équipements. Détruisez l'unité à la fin de ce tour."
+        }
+      ],
+      "image_file": "images/cards/spoiler/b102.webp",
+      "data_complete": true,
+      "sell_tag": true
+    },
+    "b111": {
+      "id": "b111",
+      "print_number": "111",
+      "set": "spoiler",
+      "card_type": "gear",
+      "color": "yellow",
+      "name_en": "Gorilla Arms",
+      "name_fr": "Bras de Gorille",
+      "title_en": "",
+      "title_fr": "",
+      "cost": 4,
+      "power": 4,
+      "ram": 4,
+      "classifications": [
+        "Cyberware"
+      ],
+      "keywords": [],
+      "effects": [
+        {
+          "type": "PASSIVE",
+          "description_en": "(Equip to a Unit or face-up Legend.) The first time this Unit steals a Gig each turn, you may steal a rival Gig with the same number of sides.",
+          "description_fr": "(Équiper à une unité ou une légende face visible.) La première fois que cette unité vole un contrat chaque tour, vous pouvez voler un contrat rival avec le même nombre de faces."
+        }
+      ],
+      "image_file": "images/cards/spoiler/b111.webp",
+      "data_complete": true,
+      "sell_tag": true
+    },
+    "b116": {
+      "id": "b116",
+      "print_number": "116",
+      "set": "spoiler",
+      "card_type": "program",
+      "color": "yellow",
+      "name_en": "Afterparty at Lizzie's",
+      "name_fr": "After chez Lizzie",
+      "title_en": "",
+      "title_fr": "",
+      "cost": 2,
+      "power": null,
+      "ram": 2,
+      "classifications": [
+        "Braindance",
+        "Mox"
+      ],
+      "keywords": [],
+      "effects": [
+        {
+          "type": "PLAY",
+          "description_en": "Adjust a rival Gig by up to ±2. Then, if a friendly Gig has the same value, draw a card.",
+          "description_fr": "Ajustez un contrat rival de ±2 maximum. Ensuite, si un contrat allié a la même valeur, piochez une carte."
+        }
+      ],
+      "image_file": "images/cards/spoiler/b116.webp",
+      "data_complete": true,
+      "sell_tag": true
+    },
+    "b121": {
+      "id": "b121",
+      "print_number": "121",
+      "set": "spoiler",
+      "card_type": "legend",
+      "color": "blue",
+      "name_en": "Alt Cunningham",
+      "name_fr": "Alt Cunningham",
+      "title_en": "Soulkiller Architect",
+      "title_fr": "Architecte du Soulkiller",
+      "cost": 6,
+      "power": 4,
+      "ram": 2,
+      "classifications": [
+        "Merc",
+        "Netrunner"
+      ],
+      "keywords": [
+        "Go Solo"
+      ],
+      "effects": [
+        {
+          "type": "GO_SOLO",
+          "description_en": "GO SOLO When this Legend steals a Gig, you may remove this Legend from the game. If you do, choose a Program from your trash. Play it for free.",
+          "description_fr": "EN SOLO Quand cette Légende vole un contrat, vous pouvez retirer cette Légende du jeu. Si vous le faites, choisissez un Programme de votre défausse. Jouez-le gratuitement."
+        }
+      ],
+      "image_file": "images/cards/spoiler/b121.webp",
+      "data_complete": true,
+      "sell_tag": true
+    },
+    "b122": {
+      "id": "b122",
+      "print_number": "122",
+      "set": "spoiler",
+      "card_type": "legend",
+      "color": "blue",
+      "name_en": "Evelyn Parker",
+      "name_fr": "Evelyn Parker",
+      "title_en": "Beautiful Enigma",
+      "title_fr": "Belle Énigme",
+      "cost": null,
+      "power": 0,
+      "ram": 2,
+      "classifications": [
+        "Doll"
+      ],
+      "keywords": [
+        "Call"
+      ],
+      "effects": [
+        {
+          "type": "CALL",
+          "description_en": "CALL Decrease a rival Gig's value by 3. [Spend]: Search the top 3 cards of your deck for up to 1 Braindance Program. Add it to your hand. Bottom-deck the rest.",
+          "description_fr": "APPEL Diminuez la valeur d'un contrat rival de 3. [Épuiser] : Cherchez dans les 3 premières cartes de votre deck jusqu'à 1 Programme Braindance. Ajoutez-le à votre main. Placez le reste sous votre deck."
+        }
+      ],
+      "image_file": "images/cards/spoiler/b122.webp",
+      "data_complete": true,
+      "sell_tag": true
+    },
+    "b125": {
+      "id": "b125",
+      "print_number": "125",
+      "set": "spoiler",
+      "card_type": "legend",
+      "color": "green",
+      "name_en": "Goro Takemura",
+      "name_fr": "Goro Takemura",
+      "title_en": "Vengeful Bodyguard",
+      "title_fr": "Garde du Corps Vengeur",
+      "cost": null,
+      "power": 0,
+      "ram": 2,
+      "classifications": [
+        "Arasaka",
+        "Corpo"
+      ],
+      "keywords": [
+        "Call",
+        "Blocker"
+      ],
+      "effects": [
+        {
+          "type": "CALL",
+          "description_en": "CALL Ready this Legend. When a rival Unit attacks, [Spend]: If you have a pair of same-sided Gigs, give a friendly Unit with cost 4 or less +1 power and BLOCKER this turn.",
+          "description_fr": "APPEL Préparez cette Légende. Quand une unité rivale attaque, [Épuiser] : Si vous avez une paire de contrats de même face, donnez à une unité alliée coûtant 4 ou moins +1 de puissance et BLOQUEUR ce tour."
+        }
+      ],
+      "image_file": "images/cards/spoiler/b125.webp",
+      "data_complete": true,
+      "sell_tag": true
+    },
+    "b126": {
+      "id": "b126",
+      "print_number": "126",
+      "set": "spoiler",
+      "card_type": "unit",
+      "color": "yellow",
+      "name_en": "Hanako Arasaka",
+      "name_fr": "Hanako Arasaka",
+      "title_en": "In A Gilded Cage",
+      "title_fr": "Dans une Cage Dorée",
+      "cost": 3,
+      "power": 0,
+      "ram": 2,
+      "classifications": [
+        "Arasaka",
+        "Corpo",
+        "Netrunner"
+      ],
+      "keywords": [
+        "Play"
+      ],
+      "effects": [
+        {
+          "type": "PLAY",
+          "description_en": "PLAY Reveal the top 4 cards of your deck. Then choose a friendly Gig. Add all cards with cost equal to that Gig's value to your hand. Trash the rest.",
+          "description_fr": "JOUER Révélez les 4 premières cartes de votre deck. Puis choisissez un contrat allié. Ajoutez toutes les cartes dont le coût est égal à la valeur de ce contrat à votre main. Défaussez le reste."
+        }
+      ],
+      "image_file": "images/cards/spoiler/b126.webp",
+      "data_complete": true,
+      "sell_tag": false
+    },
+    "b131": {
+      "id": "b131",
+      "print_number": "131",
+      "set": "spoiler",
+      "card_type": "legend",
+      "color": "red",
+      "name_en": "Royce",
+      "name_fr": "Royce",
+      "title_en": "Psycho on the Edge",
+      "title_fr": "Psycho au Bord du Gouffre",
+      "cost": 6,
+      "power": 6,
+      "ram": 2,
+      "classifications": [
+        "Ganger",
+        "Maelstrom"
+      ],
+      "keywords": [
+        "Go Solo"
+      ],
+      "effects": [
+        {
+          "type": "GO_SOLO",
+          "description_en": "GO SOLO During your turn, this Legend has +2 power for each equipped Gear.",
+          "description_fr": "EN SOLO Pendant votre tour, cette Légende a +2 de puissance pour chaque Équipement équipé."
+        }
+      ],
+      "image_file": "images/cards/spoiler/b131.webp",
+      "data_complete": true,
+      "sell_tag": true
+    },
+    "b132a": {
+      "id": "b132a",
+      "print_number": "132a",
+      "set": "spoiler",
+      "card_type": "legend",
+      "color": "red",
+      "name_en": "V",
+      "name_fr": "V",
+      "title_en": "Streetkid",
+      "title_fr": "Gosse des Rues",
+      "cost": 4,
+      "power": 3,
+      "ram": 2,
+      "classifications": [
+        "Merc"
+      ],
+      "keywords": [
+        "Go Solo"
+      ],
+      "effects": [
+        {
+          "type": "GO_SOLO_DEFEATED",
+          "description_en": "GO SOLO DEFEATED Discard the top 3 cards of your deck. Then, choose 1 Braindance Program from your trash and add it to your hand.",
+          "description_fr": "EN SOLO VAINCU Défaussez les 3 premières cartes de votre deck. Puis, choisissez 1 Programme Braindance de votre défausse et ajoutez-le à votre main."
+        }
+      ],
+      "image_file": "images/cards/spoiler/b132a.webp",
+      "data_complete": true,
+      "sell_tag": true
+    },
+    "b133": {
+      "id": "b133",
+      "print_number": "133",
+      "set": "spoiler",
+      "card_type": "legend",
+      "color": "yellow",
+      "name_en": "Dum Dum",
+      "name_fr": "Dum Dum",
+      "title_en": "Maelstrom Triggerman",
+      "title_fr": "Gâchette du Maelstrom",
+      "cost": null,
+      "power": 0,
+      "ram": 2,
+      "classifications": [
+        "Ganger",
+        "Maelstrom"
+      ],
+      "keywords": [
+        "Call"
+      ],
+      "effects": [
+        {
+          "type": "CALL",
+          "description_en": "CALL You may defeat a friendly Gear. If you do, draw 4 cards. Otherwise, draw 1 card.",
+          "description_fr": "APPEL Vous pouvez détruire un Équipement allié. Si vous le faites, piochez 4 cartes. Sinon, piochez 1 carte."
+        }
+      ],
+      "image_file": "images/cards/spoiler/b133.webp",
+      "data_complete": true,
+      "sell_tag": true
+    },
+    "b135": {
+      "id": "b135",
+      "print_number": "135",
+      "set": "spoiler",
+      "card_type": "legend",
+      "color": "yellow",
+      "name_en": "River Ward",
+      "name_fr": "River Ward",
+      "title_en": "Detective on the Hunt",
+      "title_fr": "Détective en Chasse",
+      "cost": null,
+      "power": 0,
+      "ram": 2,
+      "classifications": [
+        "NCPD"
+      ],
+      "keywords": [
+        "Call"
+      ],
+      "effects": [
+        {
+          "type": "CALL",
+          "description_en": "CALL Draw a card. When a Unit attacks, [Spend]: Choose a Gear from your hand with cost 2 or less. Equip it for free to a friendly Yellow Unit with no equipped Gears.",
+          "description_fr": "APPEL Piochez une carte. Quand une unité attaque, [Épuiser] : Choisissez un Équipement de votre main coûtant 2 ou moins. Équipez-le gratuitement à une unité jaune alliée sans équipement."
+        }
+      ],
+      "image_file": "images/cards/spoiler/b135.webp",
+      "data_complete": true,
+      "sell_tag": true
+    },
+    "b137": {
+      "id": "b137",
+      "print_number": "137",
+      "set": "spoiler",
+      "card_type": "unit",
+      "color": "yellow",
+      "name_en": "Adam Smasher",
+      "name_fr": "Adam Smasher",
+      "title_en": "Metal Over Meat",
+      "title_fr": "Le Métal sur la Chair",
+      "cost": 9,
+      "power": 15,
+      "ram": 5,
+      "classifications": [
+        "Arasaka",
+        "Merc"
+      ],
+      "keywords": [
+        "Play"
+      ],
+      "effects": [
+        {
+          "type": "PLAY",
+          "description_en": "PLAY Defeat all other Units.",
+          "description_fr": "JOUER Détruisez toutes les autres unités."
+        }
+      ],
+      "image_file": "images/cards/spoiler/b137.webp",
+      "data_complete": true,
+      "sell_tag": false
+    },
+    "n001": {
+      "id": "n001",
+      "print_number": "N001",
+      "set": "promo",
+      "card_type": "legend",
+      "color": "blue",
+      "name_en": "Lucyna Kushinada",
+      "name_fr": "Lucyna Kushinada",
+      "title_en": "Fresh Beginnings",
+      "title_fr": "Nouveaux Départs",
+      "cost": null,
+      "power": 0,
+      "ram": 2,
+      "classifications": [
+        "Overclocking"
+      ],
+      "keywords": [],
+      "effects": [],
+      "image_file": "images/cards/promo/n001.webp",
+      "data_complete": true,
+      "sell_tag": true
+    }
+  }
+}

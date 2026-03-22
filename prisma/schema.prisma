@@ -1,0 +1,302 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                  String    @id @default(auto()) @map("_id") @db.ObjectId
+  username            String    @unique
+  email               String    @unique
+  password            String
+  elo                 Int       @default(500)
+  wins                Int       @default(0)
+  losses              Int       @default(0)
+  draws               Int       @default(0)
+  tournamentWins      Int       @default(0)
+  discordId           String?
+  discordUsername      String?
+  discordHighestElo   Int       @default(0)
+  role                String    @default("user")
+  badgePrefs          String[]
+  animationsEnabled   Boolean   @default(true)
+  gameBackground      String    @default("default")
+  resetToken          String?
+  resetTokenExpiry    DateTime?
+  chatBanned          Boolean   @default(false)
+  gameBanned          Boolean   @default(false)
+  chatBanUntil        DateTime?
+  gameBanUntil        DateTime?
+  createdAt           DateTime  @default(now())
+
+  decks               Deck[]
+  gamesAsPlayer1      Game[]    @relation("player1")
+  gamesAsPlayer2      Game[]    @relation("player2")
+  quizScores          QuizScore[]
+  sentFriendships     Friendship[] @relation("sender")
+  receivedFriendships Friendship[] @relation("receiver")
+  sentInvites         MatchInvite[] @relation("inviteSender")
+  receivedInvites     MatchInvite[] @relation("inviteReceiver")
+  accounts            Account[]
+}
+
+model Game {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  player1Id    String    @db.ObjectId
+  player2Id    String?   @db.ObjectId
+  isAiGame     Boolean   @default(false)
+  aiDifficulty String?
+  status       String    @default("in_progress")
+  winnerId     String?   @db.ObjectId
+  gameState    Json
+  player1Score Int       @default(0)
+  player2Score Int       @default(0)
+  eloChange    Int?
+  createdAt    DateTime  @default(now())
+  completedAt  DateTime?
+
+  player1 User  @relation("player1", fields: [player1Id], references: [id])
+  player2 User? @relation("player2", fields: [player2Id], references: [id])
+}
+
+model Deck {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  name      String
+  cardIds   String[]
+  legendIds String[]
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Tournament {
+  id                String    @id @default(auto()) @map("_id") @db.ObjectId
+  name              String
+  type              String
+  status            String    @default("pending")
+  gameMode          String    @default("standard")
+  maxPlayers        Int       @default(8)
+  currentRound      Int       @default(0)
+  totalRounds       Int       @default(0)
+  isPublic          Boolean   @default(true)
+  joinCode          String?   @unique
+  creatorId         String    @db.ObjectId
+  requiresDiscord   Boolean   @default(false)
+  useBanList        Boolean   @default(false)
+  discordRoleReward String?
+  discordRoleBadge  String?
+  bannedCardIds     String[]
+  allowedLeagues    String[]
+  startedAt         DateTime?
+  completedAt       DateTime?
+  winnerId          String?
+  winnerUsername     String?
+
+  participants TournamentParticipant[]
+  matches      TournamentMatch[]
+}
+
+model TournamentParticipant {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  tournamentId    String   @db.ObjectId
+  userId          String   @db.ObjectId
+  username        String
+  seed            Int      @default(0)
+  eliminated      Boolean  @default(false)
+  eliminatedRound Int?
+  hasBye          Boolean  @default(false)
+
+  tournament Tournament @relation(fields: [tournamentId], references: [id])
+
+  @@unique([tournamentId, userId])
+}
+
+model TournamentMatch {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  tournamentId    String    @db.ObjectId
+  round           Int
+  matchIndex      Int
+  player1Id       String?   @db.ObjectId
+  player2Id       String?   @db.ObjectId
+  player1Username String?
+  player2Username String?
+  winnerId        String?   @db.ObjectId
+  winnerUsername   String?
+  isBye           Boolean   @default(false)
+  status          String    @default("pending")
+  roomCode        String?
+  gameId          String?   @db.ObjectId
+  absenceDeadline DateTime?
+  absentPlayerId  String?   @db.ObjectId
+  startedAt       DateTime?
+  completedAt     DateTime?
+
+  tournament Tournament @relation(fields: [tournamentId], references: [id])
+
+  @@unique([tournamentId, round, matchIndex])
+}
+
+model Friendship {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  senderId   String   @db.ObjectId
+  receiverId String   @db.ObjectId
+  status     String   @default("pending")
+  createdAt  DateTime @default(now())
+
+  sender   User @relation("sender", fields: [senderId], references: [id])
+  receiver User @relation("receiver", fields: [receiverId], references: [id])
+
+  @@unique([senderId, receiverId])
+}
+
+model MatchInvite {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  senderId   String   @db.ObjectId
+  receiverId String   @db.ObjectId
+  roomCode   String?
+  status     String   @default("pending")
+  expiresAt  DateTime
+
+  sender   User @relation("inviteSender", fields: [senderId], references: [id])
+  receiver User @relation("inviteReceiver", fields: [receiverId], references: [id])
+}
+
+model QuizScore {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  difficulty  Int
+  score       Int
+  correct     Int
+  total       Int
+  accuracy    Float
+  bestStreak  Int      @default(0)
+  completedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model BannedCard {
+  id       String   @id @default(auto()) @map("_id") @db.ObjectId
+  cardId   String   @unique
+  bannedAt DateTime @default(now())
+}
+
+model SiteSettings {
+  id             String  @id @default(auto()) @map("_id") @db.ObjectId
+  key            String  @unique
+  leaguesEnabled Boolean @default(false)
+  sealedEnabled  Boolean @default(false)
+  discordRoleIds Json?
+}
+
+model GameBackground {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String   @unique
+  url       String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model CardIssue {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  cardIds     String[]
+  cardNames   String[]
+  description String
+  status      String   @default("to_fix")
+  reportedBy  String
+  updatedBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ChatMessage {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  roomCode    String
+  userId      String
+  username    String
+  message     String
+  isEmote     Boolean  @default(false)
+  isSpectator Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model ChatReport {
+  id               String    @id @default(auto()) @map("_id") @db.ObjectId
+  messageId        String
+  reporterId       String    @db.ObjectId
+  targetId         String    @db.ObjectId
+  messageText      String
+  roomCode         String
+  reason           String
+  status           String    @default("pending")
+  action           String?
+  reporterNotified Boolean   @default(false)
+  reporterReward   String?
+  resolvedAt       DateTime?
+  resolvedBy       String?
+}
+
+model UserBan {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String    @db.ObjectId
+  username  String
+  type      String
+  permanent Boolean   @default(false)
+  expiresAt DateTime?
+  reason    String
+  issuedBy  String
+  createdAt DateTime  @default(now())
+}
+
+model Suggestion {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String
+  category    String
+  status      String   @default("backlog")
+  priority    String   @default("normal")
+  images      String[]
+  audioUrl    String?
+  submittedBy String
+  assignedTo  String?
+  adminNotes  String?
+  upvotes     Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Room {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  code      String   @unique
+  hostId    String   @db.ObjectId
+  guestId   String?  @db.ObjectId
+  gameId    String?  @db.ObjectId
+  status    String   @default("waiting")
+  isPrivate Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Account {
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @db.ObjectId
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
