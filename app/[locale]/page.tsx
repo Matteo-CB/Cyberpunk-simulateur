@@ -38,15 +38,28 @@ const MENU_BUTTONS = [
   { key: 'friends', href: '/friends', primary: false },
 ];
 
+const ADMIN_USERNAMES = ['Kutxyt', 'admin', 'Daiki0'];
+
 export default function HomePage() {
   const t = useTranslations('home');
   const [mounted, setMounted] = useState(false);
+  const [user, setUser] = useState<{ username: string; role: string; discordId?: string } | null>(null);
 
   const featuredCard = useMemo(() => {
     return FEATURED_CARDS[Math.floor(Math.random() * FEATURED_CARDS.length)];
   }, []);
 
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    setMounted(true);
+    fetch('/api/user/me').then((r) => {
+      if (r.ok) return r.json();
+      return null;
+    }).then((data) => {
+      if (data && data.username) setUser(data);
+    }).catch(() => {});
+  }, []);
+
+  const isAdmin = user && ADMIN_USERNAMES.includes(user.username);
 
   if (!mounted) return null;
 
@@ -210,34 +223,75 @@ export default function HomePage() {
               style={{ width: '100%', height: 1, marginBottom: 14, background: 'linear-gradient(to right, #1e2030, transparent)' }}
             />
 
-            {/* Account buttons */}
+            {/* Account section */}
             <motion.div
-              className="flex w-full"
-              style={{ gap: 12, marginBottom: 12 }}
+              className="flex flex-col w-full"
+              style={{ gap: 8, marginBottom: 12 }}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.5 }}
             >
-              <Link href="/login" style={{ flex: 1, textDecoration: 'none' }}>
-                <div
-                  className="flex items-center justify-center w-full font-blender uppercase tracking-widest cursor-pointer"
-                  style={{ height: 42, fontSize: 11, borderRadius: 6, border: '1px solid #262630', color: '#7a8a9a', background: 'transparent', transition: 'all 0.2s' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#00f0ff40'; e.currentTarget.style.color = '#00f0ff'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#262630'; e.currentTarget.style.color = '#7a8a9a'; }}
-                >
-                  {t('signIn')}
+              {user ? (
+                <>
+                  {/* Logged in: show username + profile/admin/logout */}
+                  <div className="flex w-full" style={{ gap: 8 }}>
+                    <Link href={`/profile/${user.username}`} style={{ flex: 1, textDecoration: 'none' }}>
+                      <div
+                        className="flex items-center justify-center w-full font-blender uppercase tracking-widest cursor-pointer"
+                        style={{ height: 42, fontSize: 11, borderRadius: 6, border: '1px solid rgba(0,240,255,0.3)', color: '#00f0ff', background: 'rgba(0,240,255,0.04)', transition: 'all 0.2s' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#00f0ff80'; e.currentTarget.style.background = 'rgba(0,240,255,0.08)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(0,240,255,0.3)'; e.currentTarget.style.background = 'rgba(0,240,255,0.04)'; }}
+                      >
+                        {user.username}
+                      </div>
+                    </Link>
+                    <button
+                      className="font-blender uppercase tracking-widest cursor-pointer"
+                      style={{ height: 42, fontSize: 10, padding: '0 16px', borderRadius: 6, border: '1px solid #262630', color: '#5a5a6a', background: 'transparent', transition: 'all 0.2s' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#ff003c40'; e.currentTarget.style.color = '#ff003c'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#262630'; e.currentTarget.style.color = '#5a5a6a'; }}
+                      onClick={() => { fetch('/api/auth/csrf').then(r => r.json()).then(({ csrfToken }) => { fetch('/api/auth/signout', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: `csrfToken=${csrfToken}` }).then(() => { setUser(null); window.location.reload(); }); }).catch(() => { setUser(null); window.location.reload(); }); }}
+                    >
+                      Logout
+                    </button>
+                  </div>
+                  {isAdmin && (
+                    <Link href="/admin" style={{ textDecoration: 'none' }}>
+                      <div
+                        className="flex items-center justify-center w-full font-blender uppercase tracking-widest cursor-pointer"
+                        style={{ height: 42, fontSize: 11, borderRadius: 6, border: '1px solid rgba(255,0,60,0.3)', color: '#ff003c', background: 'rgba(255,0,60,0.04)', transition: 'all 0.2s' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#ff003c80'; e.currentTarget.style.background = 'rgba(255,0,60,0.08)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,0,60,0.3)'; e.currentTarget.style.background = 'rgba(255,0,60,0.04)'; }}
+                      >
+                        ADMIN PANEL
+                      </div>
+                    </Link>
+                  )}
+                </>
+              ) : (
+                <div className="flex w-full" style={{ gap: 12 }}>
+                  <Link href="/login" style={{ flex: 1, textDecoration: 'none' }}>
+                    <div
+                      className="flex items-center justify-center w-full font-blender uppercase tracking-widest cursor-pointer"
+                      style={{ height: 42, fontSize: 11, borderRadius: 6, border: '1px solid #262630', color: '#7a8a9a', background: 'transparent', transition: 'all 0.2s' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#00f0ff40'; e.currentTarget.style.color = '#00f0ff'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#262630'; e.currentTarget.style.color = '#7a8a9a'; }}
+                    >
+                      {t('signIn')}
+                    </div>
+                  </Link>
+                  <Link href="/register" style={{ flex: 1, textDecoration: 'none' }}>
+                    <div
+                      className="flex items-center justify-center w-full font-blender uppercase tracking-widest cursor-pointer"
+                      style={{ height: 42, fontSize: 11, borderRadius: 6, border: '1px solid #262630', color: '#7a8a9a', background: 'transparent', transition: 'all 0.2s' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#00f0ff40'; e.currentTarget.style.color = '#00f0ff'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#262630'; e.currentTarget.style.color = '#7a8a9a'; }}
+                    >
+                      {t('register')}
+                    </div>
+                  </Link>
                 </div>
-              </Link>
-              <Link href="/register" style={{ flex: 1, textDecoration: 'none' }}>
-                <div
-                  className="flex items-center justify-center w-full font-blender uppercase tracking-widest cursor-pointer"
-                  style={{ height: 42, fontSize: 11, borderRadius: 6, border: '1px solid #262630', color: '#7a8a9a', background: 'transparent', transition: 'all 0.2s' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#00f0ff40'; e.currentTarget.style.color = '#00f0ff'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#262630'; e.currentTarget.style.color = '#7a8a9a'; }}
-                >
-                  {t('register')}
-                </div>
-              </Link>
+              )}
             </motion.div>
 
             {/* Discord */}
