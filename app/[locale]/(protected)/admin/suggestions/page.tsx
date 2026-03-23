@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import CyberBackground from '@/components/CyberBackground';
 import { Link } from '@/lib/i18n/navigation';
+import { useTranslations } from 'next-intl';
 
 interface Suggestion {
   id: string;
@@ -34,6 +35,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 export default function AdminSuggestionsPage() {
+  const t = useTranslations();
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -73,24 +75,24 @@ export default function AdminSuggestionsPage() {
               onMouseEnter={(e) => { e.currentTarget.style.color = '#7a8a9a'; }}
               onMouseLeave={(e) => { e.currentTarget.style.color = '#3a3a4a'; }}
             >
-              Back
+              {t('common.back')}
             </span>
           </Link>
           <h1
             className="font-refinery"
             style={{ fontSize: 32, letterSpacing: '0.1em', color: '#22c55e', textShadow: '0 0 20px rgba(34,197,94,0.15)' }}
           >
-            SUGGESTIONS
+            {t('admin.suggestions')}
           </h1>
         </div>
 
         {loading ? (
           <div className="font-blender" style={{ color: '#7a8a9a', fontSize: 13, textAlign: 'center', padding: 48 }}>
-            Loading...
+            {t('common.loading')}
           </div>
         ) : suggestions.length === 0 ? (
           <div className="font-blender" style={{ color: '#444', fontSize: 13, textAlign: 'center', padding: 48 }}>
-            No suggestions found
+            {t('admin.noSuggestions')}
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -130,7 +132,7 @@ export default function AdminSuggestionsPage() {
                       {sug.description}
                     </div>
                     <div className="font-blender" style={{ fontSize: 10, color: '#3a3a4a' }}>
-                      By {sug.submittedBy} on {new Date(sug.createdAt).toLocaleDateString()} | Priority: {sug.priority}
+                      {t('admin.by')} {sug.submittedBy} {t('admin.on')} {new Date(sug.createdAt).toLocaleDateString()} | {t('admin.priority')}: {sug.priority}
                     </div>
                   </div>
                   <select

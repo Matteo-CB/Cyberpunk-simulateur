@@ -5,8 +5,10 @@ import { signIn } from 'next-auth/react';
 import { motion } from 'framer-motion';
 import { Link } from '@/lib/i18n/navigation';
 import CyberBackground from '@/components/CyberBackground';
+import { useTranslations } from 'next-intl';
 
 export default function LoginPage() {
+  const t = useTranslations();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -60,7 +62,7 @@ export default function LoginPage() {
                 textShadow: '0 0 20px rgba(0,240,255,0.15)',
               }}
             >
-              SIGN IN
+              {t('auth.signIn')}
             </h1>
             <p
               className="font-blender"
@@ -71,7 +73,7 @@ export default function LoginPage() {
                 color: '#7a8a9a',
               }}
             >
-              Access your account
+              {t('auth.accessAccount')}
             </p>
           </div>
 
@@ -80,7 +82,7 @@ export default function LoginPage() {
             <input
               style={inputStyle}
               type="email"
-              placeholder="Email"
+              placeholder={t('auth.email')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -90,7 +92,7 @@ export default function LoginPage() {
             <input
               style={inputStyle}
               type="password"
-              placeholder="Password"
+              placeholder={t('auth.password')}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -133,7 +135,7 @@ export default function LoginPage() {
                 e.currentTarget.style.boxShadow = 'none';
               }}
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? t('auth.signingIn') : t('auth.signIn')}
             </button>
           </form>
 
@@ -173,7 +175,7 @@ export default function LoginPage() {
             <svg width="18" height="14" viewBox="0 0 71 55" fill="currentColor">
               <path d="M60.1 4.9A58.5 58.5 0 0045.4.2a.2.2 0 00-.2.1 40.8 40.8 0 00-1.8 3.7 54 54 0 00-16.2 0A37.4 37.4 0 0025.4.3a.2.2 0 00-.2-.1A58.4 58.4 0 0010.5 4.9a.2.2 0 00-.1.1C1.5 18.7-.9 32.2.3 45.5v.2a58.9 58.9 0 0017.7 9a.2.2 0 00.3-.1 42.1 42.1 0 003.6-5.9.2.2 0 00-.1-.3 38.8 38.8 0 01-5.5-2.7.2.2 0 01 0-.4l1.1-.9a.2.2 0 01.2 0 42 42 0 0035.6 0 .2.2 0 01.2 0l1.1.9a.2.2 0 010 .4 36.4 36.4 0 01-5.5 2.7.2.2 0 00-.1.3 47.3 47.3 0 003.6 5.9.2.2 0 00.3.1A58.7 58.7 0 0070.4 45.7v-.2C72 30.1 68 16.7 60.2 5a.2.2 0 00-.1-.1zM23.7 37.3c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2c3.6 0 6.5 3.3 6.4 7.2 0 4-2.8 7.2-6.4 7.2zm23.6 0c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2c3.6 0 6.5 3.3 6.4 7.2 0 4-2.9 7.2-6.4 7.2z" />
             </svg>
-            Sign in with Discord
+            {t('auth.signInDiscord')}
           </button>
 
           {/* Links */}
@@ -185,7 +187,7 @@ export default function LoginPage() {
                 onMouseEnter={(e) => { e.currentTarget.style.color = '#00f0ff'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.color = '#7a8a9a'; }}
               >
-                Create Account
+                {t('auth.createAccount')}
               </span>
             </Link>
             <Link href="/forgot-password">
@@ -195,7 +197,7 @@ export default function LoginPage() {
                 onMouseEnter={(e) => { e.currentTarget.style.color = '#00f0ff'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.color = '#7a8a9a'; }}
               >
-                Forgot Password?
+                {t('auth.forgotPassword')}
               </span>
             </Link>
           </div>
@@ -209,7 +211,7 @@ export default function LoginPage() {
                 onMouseEnter={(e) => { e.currentTarget.style.color = '#7a8a9a'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.color = '#3a3a4a'; }}
               >
-                Back to Menu
+                {t('auth.backToMenu')}
               </span>
             </Link>
           </div>

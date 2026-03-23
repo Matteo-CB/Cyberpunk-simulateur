@@ -5,8 +5,10 @@ import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Link } from '@/lib/i18n/navigation';
 import CyberBackground from '@/components/CyberBackground';
+import { useTranslations } from 'next-intl';
 
 export default function ResetPasswordPage() {
+  const t = useTranslations();
   const searchParams = useSearchParams();
   const token = searchParams.get('token') || '';
   const [password, setPassword] = useState('');
@@ -65,7 +67,7 @@ export default function ResetPasswordPage() {
                 textShadow: '0 0 20px rgba(0,240,255,0.15)',
               }}
             >
-              RESET PASSWORD
+              {t('auth.resetPassword')}
             </h1>
           </div>
 
@@ -75,14 +77,14 @@ export default function ResetPasswordPage() {
                 className="font-blender"
                 style={{ fontSize: 13, color: '#22c55e', marginBottom: 24, lineHeight: 1.7 }}
               >
-                Password reset successfully!
+                {t('auth.resetSuccess')}
               </p>
               <Link href="/login">
                 <span
                   className="font-blender"
                   style={{ fontSize: 12, cursor: 'pointer', color: '#00f0ff', transition: 'opacity 0.2s' }}
                 >
-                  Go to Login
+                  {t('auth.goToLogin')}
                 </span>
               </Link>
             </div>
@@ -91,7 +93,7 @@ export default function ResetPasswordPage() {
               <input
                 style={inputStyle}
                 type="password"
-                placeholder="New Password"
+                placeholder={t('auth.newPassword')}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -101,7 +103,7 @@ export default function ResetPasswordPage() {
               <input
                 style={inputStyle}
                 type="password"
-                placeholder="Confirm Password"
+                placeholder={t('auth.confirmPassword')}
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
                 required
@@ -142,7 +144,7 @@ export default function ResetPasswordPage() {
                   e.currentTarget.style.boxShadow = 'none';
                 }}
               >
-                Reset Password
+                {t('auth.resetPassword')}
               </button>
 
               <div style={{ textAlign: 'center', marginTop: 8 }}>
@@ -153,7 +155,7 @@ export default function ResetPasswordPage() {
                     onMouseEnter={(e) => { e.currentTarget.style.color = '#00f0ff'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.color = '#7a8a9a'; }}
                   >
-                    Back to Login
+                    {t('auth.backToLogin')}
                   </span>
                 </Link>
               </div>

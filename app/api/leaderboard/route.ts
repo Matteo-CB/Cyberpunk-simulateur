@@ -33,7 +33,13 @@ export async function GET(req: NextRequest) {
       prisma.user.count({ where }),
     ]);
 
-    return NextResponse.json({ players, total });
+    const safePlayers = players.map((p: any) => ({
+      ...p,
+      placementCompleted: p.placementCompleted ?? false,
+      gamesPlayed: p.gamesPlayed ?? 0,
+    }));
+
+    return NextResponse.json({ players: safePlayers, total });
   } catch (error) {
     console.error('Error fetching leaderboard:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

@@ -4,8 +4,10 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import CyberBackground from '@/components/CyberBackground';
 import { Link } from '@/lib/i18n/navigation';
+import { useTranslations } from 'next-intl';
 
 export default function FriendsPage() {
+  const t = useTranslations();
   const [friends, setFriends] = useState<any[]>([]);
   const [requests, setRequests] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -26,8 +28,8 @@ export default function FriendsPage() {
   };
 
   const tabLabels: Record<string, string> = {
-    friends: 'Friends',
-    requests: 'Requests',
+    friends: t('friends.accepted'),
+    requests: t('friends.requests'),
   };
 
   return (
@@ -47,7 +49,7 @@ export default function FriendsPage() {
               onMouseEnter={(e) => { e.currentTarget.style.color = '#7a8a9a'; }}
               onMouseLeave={(e) => { e.currentTarget.style.color = '#3a3a4a'; }}
             >
-              Back
+              {t('common.back')}
             </span>
           </Link>
           <h1
@@ -59,7 +61,7 @@ export default function FriendsPage() {
               textShadow: '0 0 20px rgba(0,240,255,0.15)',
             }}
           >
-            FRIENDS
+            {t('friends.title')}
           </h1>
         </div>
 
@@ -80,7 +82,7 @@ export default function FriendsPage() {
             marginBottom: 16,
             transition: 'border-color 0.2s ease',
           }}
-          placeholder="Search users to add..."
+          placeholder={t('friends.search')}
           value={searchQuery}
           onChange={(e) => searchUsers(e.target.value)}
           onFocus={(e) => { e.currentTarget.style.borderColor = '#00f0ff40'; }}
@@ -130,7 +132,7 @@ export default function FriendsPage() {
                   onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,240,255,0.08)'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                 >
-                  Add Friend
+                  {t('friends.addFriend')}
                 </button>
               </div>
             ))}
@@ -197,7 +199,7 @@ export default function FriendsPage() {
                   onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(34,197,94,0.08)'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                 >
-                  Invite
+                  {t('friends.invite')}
                 </button>
                 <button
                   className="font-blender"
@@ -218,7 +220,7 @@ export default function FriendsPage() {
                   onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,0,60,0.06)'; e.currentTarget.style.color = '#ff003c'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,0,60,0.6)'; }}
                 >
-                  Remove
+                  {t('friends.remove')}
                 </button>
               </div>
             </motion.div>
@@ -261,7 +263,7 @@ export default function FriendsPage() {
                   onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(34,197,94,0.08)'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                 >
-                  Accept
+                  {t('friends.accept')}
                 </button>
                 <button
                   className="font-blender"
@@ -282,7 +284,7 @@ export default function FriendsPage() {
                   onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,0,60,0.06)'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                 >
-                  Decline
+                  {t('friends.decline')}
                 </button>
               </div>
             </motion.div>
@@ -293,7 +295,7 @@ export default function FriendsPage() {
               className="font-blender"
               style={{ fontSize: 13, textAlign: 'center', padding: '48px 0', color: '#3a3a4a' }}
             >
-              {tab === 'friends' ? 'No friends yet. Search and add some!' : 'No pending requests.'}
+              {tab === 'friends' ? t('friends.noFriends') : t('friends.noRequests')}
             </div>
           )}
         </div>

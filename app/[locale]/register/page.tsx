@@ -4,8 +4,10 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useRouter } from '@/lib/i18n/navigation';
 import CyberBackground from '@/components/CyberBackground';
+import { useTranslations } from 'next-intl';
 
 export default function RegisterPage() {
+  const t = useTranslations();
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -75,7 +77,7 @@ export default function RegisterPage() {
                 textShadow: '0 0 20px rgba(0,240,255,0.15)',
               }}
             >
-              REGISTER
+              {t('auth.register')}
             </h1>
             <p
               className="font-blender"
@@ -86,7 +88,7 @@ export default function RegisterPage() {
                 color: '#7a8a9a',
               }}
             >
-              Join Night City
+              {t('auth.joinNightCity')}
             </p>
           </div>
 
@@ -95,7 +97,7 @@ export default function RegisterPage() {
             <input
               style={inputStyle}
               type="text"
-              placeholder="Username"
+              placeholder={t('auth.username')}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
@@ -105,7 +107,7 @@ export default function RegisterPage() {
             <input
               style={inputStyle}
               type="email"
-              placeholder="Email"
+              placeholder={t('auth.email')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -115,7 +117,7 @@ export default function RegisterPage() {
             <input
               style={inputStyle}
               type="password"
-              placeholder="Password"
+              placeholder={t('auth.password')}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -125,7 +127,7 @@ export default function RegisterPage() {
             <input
               style={inputStyle}
               type="password"
-              placeholder="Confirm Password"
+              placeholder={t('auth.confirmPassword')}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
@@ -168,7 +170,7 @@ export default function RegisterPage() {
                 e.currentTarget.style.boxShadow = 'none';
               }}
             >
-              {loading ? 'Creating...' : 'Create Account'}
+              {loading ? t('auth.creating') : t('auth.createAccount')}
             </button>
           </form>
 
@@ -181,7 +183,7 @@ export default function RegisterPage() {
                 onMouseEnter={(e) => { e.currentTarget.style.color = '#00f0ff'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.color = '#7a8a9a'; }}
               >
-                Already have an account?
+                {t('auth.haveAccount')}
               </span>
             </Link>
           </div>
@@ -195,7 +197,7 @@ export default function RegisterPage() {
                 onMouseEnter={(e) => { e.currentTarget.style.color = '#7a8a9a'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.color = '#3a3a4a'; }}
               >
-                Back to Menu
+                {t('auth.backToMenu')}
               </span>
             </Link>
           </div>

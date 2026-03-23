@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import CyberBackground from '@/components/CyberBackground';
 import { Link } from '@/lib/i18n/navigation';
+import { useTranslations } from 'next-intl';
 
 interface CardIssue {
   id: string;
@@ -23,6 +24,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function AdminCardsPage() {
+  const t = useTranslations();
   const [issues, setIssues] = useState<CardIssue[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -60,24 +62,24 @@ export default function AdminCardsPage() {
               onMouseEnter={(e) => { e.currentTarget.style.color = '#7a8a9a'; }}
               onMouseLeave={(e) => { e.currentTarget.style.color = '#3a3a4a'; }}
             >
-              Back
+              {t('common.back')}
             </span>
           </Link>
           <h1
             className="font-refinery"
             style={{ fontSize: 32, letterSpacing: '0.1em', color: '#00f0ff', textShadow: '0 0 20px rgba(0,240,255,0.15)' }}
           >
-            CARD MANAGEMENT
+            {t('admin.cardManagement')}
           </h1>
         </div>
 
         {loading ? (
           <div className="font-blender" style={{ color: '#7a8a9a', fontSize: 13, textAlign: 'center', padding: 48 }}>
-            Loading...
+            {t('common.loading')}
           </div>
         ) : issues.length === 0 ? (
           <div className="font-blender" style={{ color: '#444', fontSize: 13, textAlign: 'center', padding: 48 }}>
-            No card issues found
+            {t('admin.noIssues')}
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -100,7 +102,7 @@ export default function AdminCardsPage() {
                       {issue.description}
                     </div>
                     <div className="font-blender" style={{ fontSize: 10, color: '#3a3a4a' }}>
-                      Reported by {issue.reportedBy} on {new Date(issue.createdAt).toLocaleDateString()}
+                      {t('admin.reportedBy')} {issue.reportedBy} {t('admin.on')} {new Date(issue.createdAt).toLocaleDateString()}
                     </div>
                   </div>
                   <select

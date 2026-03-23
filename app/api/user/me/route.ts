@@ -20,5 +20,12 @@ export async function GET() {
   });
 
   if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
-  return NextResponse.json(user);
+
+  const safeUser = {
+    ...user,
+    placementCompleted: (user as any).placementCompleted ?? false,
+    gamesPlayed: (user as any).gamesPlayed ?? 0,
+  };
+
+  return NextResponse.json(safeUser);
 }

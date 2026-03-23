@@ -4,8 +4,10 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from '@/lib/i18n/navigation';
 import CyberBackground from '@/components/CyberBackground';
+import { useTranslations } from 'next-intl';
 
 export default function ForgotPasswordPage() {
+  const t = useTranslations();
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -60,7 +62,7 @@ export default function ForgotPasswordPage() {
                 textShadow: '0 0 20px rgba(0,240,255,0.15)',
               }}
             >
-              FORGOT PASSWORD
+              {t('auth.forgotPassword')}
             </h1>
           </div>
 
@@ -70,14 +72,14 @@ export default function ForgotPasswordPage() {
                 className="font-blender"
                 style={{ fontSize: 13, color: '#22c55e', marginBottom: 24, lineHeight: 1.7 }}
               >
-                If an account exists with that email, a reset link has been sent.
+                {t('auth.resetSent')}
               </p>
               <Link href="/login">
                 <span
                   className="font-blender"
                   style={{ fontSize: 12, cursor: 'pointer', color: '#00f0ff', transition: 'opacity 0.2s' }}
                 >
-                  Back to Login
+                  {t('auth.backToLogin')}
                 </span>
               </Link>
             </div>
@@ -86,7 +88,7 @@ export default function ForgotPasswordPage() {
               <input
                 style={inputStyle}
                 type="email"
-                placeholder="Email"
+                placeholder={t('auth.email')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -119,7 +121,7 @@ export default function ForgotPasswordPage() {
                   e.currentTarget.style.boxShadow = 'none';
                 }}
               >
-                {loading ? 'Sending...' : 'Send Reset Link'}
+                {loading ? t('auth.sending') : t('auth.sendResetLink')}
               </button>
 
               <div style={{ textAlign: 'center', marginTop: 8 }}>
@@ -130,7 +132,7 @@ export default function ForgotPasswordPage() {
                     onMouseEnter={(e) => { e.currentTarget.style.color = '#00f0ff'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.color = '#7a8a9a'; }}
                   >
-                    Back to Login
+                    {t('auth.backToLogin')}
                   </span>
                 </Link>
               </div>

@@ -4,15 +4,17 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import CyberBackground from '@/components/CyberBackground';
 import { Link } from '@/lib/i18n/navigation';
-
-const ADMIN_LINKS = [
-  { href: '/admin/cards', label: 'Card Management', tag: 'CARDS', color: '#00f0ff' },
-  { href: '/admin/settings', label: 'Site Settings', tag: 'CONFIG', color: '#fcee09' },
-  { href: '/admin/suggestions', label: 'Suggestions', tag: 'INBOX', color: '#22c55e' },
-];
+import { useTranslations } from 'next-intl';
 
 export default function AdminPage() {
+  const t = useTranslations();
   const [stats, setStats] = useState({ users: 0, games: 0 });
+
+  const ADMIN_LINKS = [
+    { href: '/admin/cards', label: t('admin.cardManagement'), tag: 'CARDS', color: '#00f0ff' },
+    { href: '/admin/settings', label: t('admin.siteSettings'), tag: 'CONFIG', color: '#fcee09' },
+    { href: '/admin/suggestions', label: t('admin.suggestions'), tag: 'INBOX', color: '#22c55e' },
+  ];
 
   useEffect(() => {
     fetch('/api/admin/stats')
@@ -38,7 +40,7 @@ export default function AdminPage() {
               onMouseEnter={(e) => { e.currentTarget.style.color = '#7a8a9a'; }}
               onMouseLeave={(e) => { e.currentTarget.style.color = '#3a3a4a'; }}
             >
-              Back
+              {t('common.back')}
             </span>
           </Link>
           <h1
@@ -50,15 +52,15 @@ export default function AdminPage() {
               textShadow: '0 0 20px rgba(255,0,60,0.2)',
             }}
           >
-            ADMIN PANEL
+            {t('admin.title')}
           </h1>
         </div>
 
         {/* Stats Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, marginBottom: 32 }}>
           {[
-            { label: 'Users', value: stats.users, color: '#00f0ff' },
-            { label: 'Games', value: stats.games, color: '#22c55e' },
+            { label: t('admin.users'), value: stats.users, color: '#00f0ff' },
+            { label: t('admin.games'), value: stats.games, color: '#22c55e' },
           ].map((stat, i) => (
             <motion.div
               key={stat.label}
@@ -160,7 +162,7 @@ export default function AdminPage() {
             onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,0,60,0.06)'; e.currentTarget.style.borderColor = 'rgba(255,0,60,0.5)'; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'rgba(255,0,60,0.25)'; }}
           >
-            Toggle Maintenance
+            {t('admin.maintenance')}
           </button>
           <button
             className="font-blender"
@@ -180,7 +182,7 @@ export default function AdminPage() {
             onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(88,101,242,0.06)'; e.currentTarget.style.borderColor = 'rgba(88,101,242,0.5)'; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'rgba(88,101,242,0.25)'; }}
           >
-            Sync Discord Roles
+            {t('admin.syncDiscord')}
           </button>
         </div>
       </div>

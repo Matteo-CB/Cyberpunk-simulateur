@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import CyberBackground from '@/components/CyberBackground';
 import { Link } from '@/lib/i18n/navigation';
+import { useTranslations } from 'next-intl';
 
 interface SiteSettingsData {
   id?: string;
@@ -13,6 +14,7 @@ interface SiteSettingsData {
 }
 
 export default function AdminSettingsPage() {
+  const t = useTranslations();
   const [settings, setSettings] = useState<SiteSettingsData>({
     key: 'main',
     leaguesEnabled: false,
@@ -47,7 +49,7 @@ export default function AdminSettingsPage() {
       try {
         parsedRoles = JSON.parse(discordRolesText);
       } catch {
-        setMessage('Invalid JSON for Discord Role IDs');
+        setMessage(t('admin.invalidJson'));
         setSaving(false);
         return;
       }
@@ -65,9 +67,9 @@ export default function AdminSettingsPage() {
     });
 
     if (res.ok) {
-      setMessage('Settings saved');
+      setMessage(t('admin.settingsSaved'));
     } else {
-      setMessage('Error saving settings');
+      setMessage(t('admin.errorSaving'));
     }
     setSaving(false);
   };
@@ -94,20 +96,20 @@ export default function AdminSettingsPage() {
               onMouseEnter={(e) => { e.currentTarget.style.color = '#7a8a9a'; }}
               onMouseLeave={(e) => { e.currentTarget.style.color = '#3a3a4a'; }}
             >
-              Back
+              {t('common.back')}
             </span>
           </Link>
           <h1
             className="font-refinery"
             style={{ fontSize: 32, letterSpacing: '0.1em', color: '#fcee09', textShadow: '0 0 20px rgba(252,238,9,0.15)' }}
           >
-            SITE SETTINGS
+            {t('admin.siteSettings')}
           </h1>
         </div>
 
         {loading ? (
           <div className="font-blender" style={{ color: '#7a8a9a', fontSize: 13, textAlign: 'center', padding: 48 }}>
-            Loading...
+            {t('common.loading')}
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -115,7 +117,7 @@ export default function AdminSettingsPage() {
             <div style={sectionStyle}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div className="font-blender" style={{ fontSize: 14, color: '#e0e8f0' }}>
-                  Leagues Enabled
+                  {t('admin.leaguesEnabled')}
                 </div>
                 <button
                   style={{
@@ -141,7 +143,7 @@ export default function AdminSettingsPage() {
             <div style={sectionStyle}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div className="font-blender" style={{ fontSize: 14, color: '#e0e8f0' }}>
-                  Sealed Mode Enabled
+                  {t('admin.sealedEnabled')}
                 </div>
                 <button
                   style={{
@@ -166,7 +168,7 @@ export default function AdminSettingsPage() {
             {/* Discord Role IDs */}
             <div style={sectionStyle}>
               <div className="font-blender" style={{ fontSize: 14, color: '#e0e8f0', marginBottom: 12 }}>
-                Discord Role IDs (JSON)
+                {t('admin.discordRoleIds')}
               </div>
               <textarea
                 className="font-blender"
@@ -194,13 +196,13 @@ export default function AdminSettingsPage() {
               onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,240,255,0.12)'; e.currentTarget.style.boxShadow = '0 0 20px rgba(0,240,255,0.15)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(0,240,255,0.08), rgba(0,240,255,0.02))'; e.currentTarget.style.boxShadow = 'none'; }}
             >
-              {saving ? 'Saving...' : 'Save Settings'}
+              {saving ? t('admin.saving') : t('admin.saveSettings')}
             </button>
 
             {message && (
               <div
                 className="font-blender"
-                style={{ fontSize: 12, textAlign: 'center', color: message.includes('Error') || message.includes('Invalid') ? '#ff003c' : '#22c55e' }}
+                style={{ fontSize: 12, textAlign: 'center', color: message === t('admin.settingsSaved') ? '#22c55e' : '#ff003c' }}
               >
                 {message}
               </div>

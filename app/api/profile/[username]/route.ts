@@ -28,7 +28,13 @@ export async function GET(
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    return NextResponse.json(user);
+    const safeUser = {
+      ...user,
+      placementCompleted: user.placementCompleted ?? false,
+      gamesPlayed: user.gamesPlayed ?? 0,
+    };
+
+    return NextResponse.json(safeUser);
   } catch (error) {
     console.error('Error fetching profile:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
