@@ -23,6 +23,8 @@ export async function GET(req: NextRequest) {
           wins: true,
           losses: true,
           draws: true,
+          placementCompleted: true,
+          gamesPlayed: true,
         },
         orderBy: { elo: 'desc' },
         take: limit,

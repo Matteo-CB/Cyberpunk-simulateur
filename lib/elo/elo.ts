@@ -31,3 +31,10 @@ export function getLeagueTier(elo: number): {
   }
   return tiers[tiers.length - 1];
 }
+
+export const UNRANKED_TIER = { key: 'unranked', name: 'Unranked', color: '#4a4a5a', minElo: 0, symbol: '?' };
+
+export function getLeagueTierForPlayer(elo: number, placementCompleted: boolean) {
+  if (!placementCompleted) return UNRANKED_TIER;
+  return getLeagueTier(elo);
+}

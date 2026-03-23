@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 import CyberBackground from '@/components/CyberBackground';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { Link } from '@/lib/i18n/navigation';
-import { getLeagueTier } from '@/lib/elo/elo';
+import { getLeagueTierForPlayer } from '@/lib/elo/elo';
 
 interface LeaderboardEntry {
   username: string;
@@ -14,6 +14,8 @@ interface LeaderboardEntry {
   wins: number;
   losses: number;
   draws: number;
+  placementCompleted: boolean;
+  gamesPlayed: number;
 }
 
 export default function LeaderboardPage() {
@@ -147,7 +149,7 @@ export default function LeaderboardPage() {
             </div>
           ) : (
             players.map((player, i) => {
-              const tier = getLeagueTier(player.elo);
+              const tier = getLeagueTierForPlayer(player.elo, player.placementCompleted);
               const total = player.wins + player.losses + player.draws;
               const winRate = total > 0 ? Math.round((player.wins / total) * 100) : 0;
 

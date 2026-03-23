@@ -26,6 +26,8 @@ model User {
   gameBackground      String    @default("default")
   resetToken          String?
   resetTokenExpiry    DateTime?
+  gamesPlayed         Int       @default(0)
+  placementCompleted  Boolean   @default(false)
   chatBanned          Boolean   @default(false)
   gameBanned          Boolean   @default(false)
   chatBanUntil        DateTime?

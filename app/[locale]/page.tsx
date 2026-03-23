@@ -43,7 +43,7 @@ const ADMIN_USERNAMES = ['Kutxyt', 'admin', 'Daiki0'];
 export default function HomePage() {
   const t = useTranslations('home');
   const [mounted, setMounted] = useState(false);
-  const [user, setUser] = useState<{ username: string; role: string; discordId?: string } | null>(null);
+  const [user, setUser] = useState<{ username: string; role: string; discordId?: string; discordUsername?: string } | null>(null);
 
   const featuredCard = useMemo(() => {
     return FEATURED_CARDS[Math.floor(Math.random() * FEATURED_CARDS.length)];
@@ -266,6 +266,25 @@ export default function HomePage() {
                         ADMIN PANEL
                       </div>
                     </Link>
+                  )}
+                  {user.discordId ? (
+                    <div
+                      className="flex items-center justify-center w-full font-blender"
+                      style={{ height: 36, fontSize: 11, borderRadius: 6, border: '1px solid rgba(88,101,242,0.2)', color: '#5865F2', background: 'rgba(88,101,242,0.04)' }}
+                    >
+                      Discord: {user.discordUsername || 'Linked'}
+                    </div>
+                  ) : (
+                    <a href="/api/user/link-discord" style={{ textDecoration: 'none', width: '100%' }}>
+                      <div
+                        className="flex items-center justify-center w-full font-blender uppercase tracking-widest cursor-pointer"
+                        style={{ height: 42, fontSize: 11, borderRadius: 6, border: '1px solid rgba(88,101,242,0.3)', color: '#5865F2', background: 'rgba(88,101,242,0.04)', transition: 'all 0.2s' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#5865F280'; e.currentTarget.style.background = 'rgba(88,101,242,0.1)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(88,101,242,0.3)'; e.currentTarget.style.background = 'rgba(88,101,242,0.04)'; }}
+                      >
+                        Link Discord
+                      </div>
+                    </a>
                   )}
                 </>
               ) : (

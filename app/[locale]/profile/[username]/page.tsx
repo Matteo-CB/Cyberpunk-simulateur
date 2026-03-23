@@ -4,7 +4,7 @@ import { useState, useEffect, use } from 'react';
 import { motion } from 'framer-motion';
 import CyberBackground from '@/components/CyberBackground';
 import { Link } from '@/lib/i18n/navigation';
-import { getLeagueTier } from '@/lib/elo/elo';
+import { getLeagueTierForPlayer } from '@/lib/elo/elo';
 import Image from 'next/image';
 
 interface ProfileData {
@@ -13,6 +13,8 @@ interface ProfileData {
   wins: number;
   losses: number;
   draws: number;
+  placementCompleted: boolean;
+  gamesPlayed: number;
   discordUsername?: string;
   createdAt: string;
 }
@@ -75,7 +77,7 @@ export default function ProfilePage({ params }: { params: Promise<{ username: st
     );
   }
 
-  const tier = getLeagueTier(profile.elo);
+  const tier = getLeagueTierForPlayer(profile.elo, profile.placementCompleted);
   const total = profile.wins + profile.losses + profile.draws;
   const winRate = total > 0 ? Math.round((profile.wins / total) * 100) : 0;
 

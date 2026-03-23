@@ -1,7 +1,9 @@
 import { auth } from '@/lib/auth/auth';
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { calculateElo } from '@/lib/elo/elo';
+import { calculateElo, getLeagueTier } from '@/lib/elo/elo';
+import { syncDiscordRole } from '@/lib/discord/roleSync';
+import { sendRankUpWebhook } from '@/lib/discord/rankUpWebhook';
 
 export async function POST(req: NextRequest) {
   try {
@@ -71,6 +73,9 @@ export async function PUT(req: NextRequest) {
       const p1Result = winnerId === game.player1Id ? 'win' : winnerId === game.player2Id ? 'loss' : 'draw';
       const p2Result = winnerId === game.player2Id ? 'win' : winnerId === game.player1Id ? 'loss' : 'draw';
 
+      const oldP1Elo = game.player1.elo;
+      const oldP2Elo = game.player2.elo;
+
       const p1Elo = calculateElo(game.player1.elo, game.player2.elo, p1Result as 'win' | 'loss' | 'draw');
       const p2Elo = calculateElo(game.player2.elo, game.player1.elo, p2Result as 'win' | 'loss' | 'draw');
 
@@ -97,6 +102,39 @@ export async function PUT(req: NextRequest) {
           draws: p2Result === 'draw' ? { increment: 1 } : undefined,
         },
       });
+
+      // Update games played and check placement
+      const playerIds = [game.player1Id, game.player2Id!];
+      const oldElos = [oldP1Elo, oldP2Elo];
+      const newElos = [p1Elo.newElo, p2Elo.newElo];
+
+      for (let idx = 0; idx < playerIds.length; idx++) {
+        const pid = playerIds[idx];
+        const updated = await prisma.user.update({
+          where: { id: pid },
+          data: {
+            gamesPlayed: { increment: 1 },
+          },
+          select: { gamesPlayed: true, placementCompleted: true, discordId: true, elo: true, username: true }
+        });
+
+        if (updated.gamesPlayed >= 5 && !updated.placementCompleted) {
+          await prisma.user.update({ where: { id: pid }, data: { placementCompleted: true } });
+          updated.placementCompleted = true;
+        }
+
+        // Discord role sync if player has discord linked
+        if (updated.discordId && updated.placementCompleted) {
+          try {
+            const oldTier = getLeagueTier(oldElos[idx]);
+            const newTier = getLeagueTier(newElos[idx]);
+            await syncDiscordRole(updated.discordId, updated.elo);
+            if (oldTier.key !== newTier.key) {
+              await sendRankUpWebhook(updated.discordId, updated.username, newTier, updated.elo, oldTier.key);
+            }
+          } catch (e) { console.error('Discord sync error:', e); }
+        }
+      }
     }
 
     const updatedGame = await prisma.game.update({
