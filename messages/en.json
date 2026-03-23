@@ -20,6 +20,26 @@
     "logout": "LOGOUT",
     "footer": "Fan-made simulator — Not affiliated with CD Projekt Red, R. Talsorian Games or Weird CO"
   },
+  "online": {
+    "title": "PLAY ONLINE",
+    "subtitle": "Connect with other runners",
+    "publicRooms": "PUBLIC ROOMS",
+    "privateRooms": "PRIVATE ROOMS",
+    "casual": "CASUAL",
+    "ranked": "RANKED",
+    "noRooms": "No rooms available",
+    "createRoom": "CREATE ROOM",
+    "joinRoom": "JOIN",
+    "enterCode": "Enter room code",
+    "createPrivate": "CREATE PRIVATE ROOM",
+    "joinPrivate": "JOIN PRIVATE ROOM",
+    "roomCode": "ROOM CODE",
+    "waitingOpponent": "Waiting for opponent...",
+    "activeGames": "ACTIVE GAMES",
+    "noActiveGames": "No active games",
+    "hosted": "hosted by {name}",
+    "vs": "vs"
+  },
   "play": {
     "title": "PLAY",
     "subtitle": "Choose your mode",

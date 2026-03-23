@@ -38,6 +38,9 @@ interface RoomData {
   guestUsername: string | null;
   gameState: unknown | null;
   createdAt: number;
+  isPrivate: boolean;
+  isRanked: boolean;
+  gameMode: 'casual' | 'ranked';
 }
 
 interface ChatPayload {
@@ -66,6 +69,21 @@ interface GameStatePayload {
 const rooms = new Map<string, RoomData>();
 const socketToRoom = new Map<string, string>();
 const socketToUser = new Map<string, { userId: string; username: string }>();
+
+let ioRef: any = null;
+function broadcastRoomList() {
+  if (!ioRef) return;
+  const publicRooms = Array.from(rooms.values())
+    .filter((r: RoomData) => !r.isPrivate && !r.guestId)
+    .map((r: RoomData) => ({
+      code: r.code,
+      hostUsername: r.hostUsername,
+      gameMode: r.gameMode,
+      isRanked: r.isRanked,
+      createdAt: r.createdAt,
+    }));
+  ioRef.emit('room:list-update', publicRooms);
+}
 
 // ------------------------------------------------------------------
 // Server Setup
@@ -111,6 +129,8 @@ async function startServer() {
     transports: ['websocket', 'polling'],
   });
 
+  ioRef = io;
+
   // ----------------------------------------------------------------
   // Socket.IO Event Handlers
   // ----------------------------------------------------------------
@@ -139,6 +159,8 @@ async function startServer() {
           userId: string;
           username: string;
           isPrivate?: boolean;
+          isRanked?: boolean;
+          gameMode?: 'casual' | 'ranked';
         },
         ack?: (res: { ok: boolean; error?: string }) => void
       ) => {
@@ -157,6 +179,9 @@ async function startServer() {
           guestUsername: null,
           gameState: null,
           createdAt: Date.now(),
+          isPrivate: data.isPrivate || false,
+          isRanked: data.isRanked || false,
+          gameMode: data.gameMode || 'casual',
         };
 
         rooms.set(roomCode, room);
@@ -165,11 +190,38 @@ async function startServer() {
         socketToUser.set(socket.id, { userId, username });
 
         io.to(roomCode).emit('room:updated', room);
+        // Broadcast updated public room list to all clients
+        broadcastRoomList();
         if (ack) ack({ ok: true });
 
         console.log(`[socket] Room created: ${roomCode} by ${username}`);
       }
     );
+
+    // --- Room: List (public rooms + active games) ---
+    socket.on('room:list', () => {
+      const publicRooms = Array.from(rooms.values())
+        .filter((r) => !r.isPrivate && !r.guestId)
+        .map((r) => ({
+          code: r.code,
+          hostUsername: r.hostUsername,
+          gameMode: r.gameMode,
+          isRanked: r.isRanked,
+          createdAt: r.createdAt,
+        }));
+      const activeGames = Array.from(rooms.values())
+        .filter((r) => r.guestId && r.gameState)
+        .map((r) => ({
+          code: r.code,
+          player1: r.hostUsername,
+          player2: r.guestUsername,
+          gameMode: r.gameMode,
+          isRanked: r.isRanked,
+          isPrivate: r.isPrivate,
+        }));
+      socket.emit('room:list-update', publicRooms);
+      socket.emit('games:list-update', activeGames);
+    });
 
     // --- Room: Join ---
     socket.on(
