@@ -1,6 +1,23 @@
 import { RANK_TIERS, type RankTier } from './roleSync';
 
-const WEBHOOK_URL = process.env.DISCORD_RANK_WEBHOOK_URL;
+const WEBHOOK_URL = process.env.DISCORD_RANKUP_WEBHOOK_URL || process.env.DISCORD_RANK_WEBHOOK_URL;
+const BOT_TOKEN = process.env.BOT_DISCORD_TOKEN;
+const SERVER_ID = process.env.SERVER_DISCORD_ID;
+
+/**
+ * Check if a Discord user is a member of the configured server.
+ */
+async function isUserOnServer(discordId: string): Promise<boolean> {
+  if (!BOT_TOKEN || !SERVER_ID) return false;
+  try {
+    const res = await fetch(`https://discord.com/api/v10/guilds/${SERVER_ID}/members/${discordId}`, {
+      headers: { Authorization: `Bot ${BOT_TOKEN}` },
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Rank tier symbols used in Discord notifications.
@@ -119,13 +136,15 @@ export async function sendRankUpWebhook(
 
   try {
     const symbol = TIER_SYMBOLS[tier.key] || '';
-    const mention = discordId ? `<@${discordId}>` : `**${username}**`;
+    // Only mention if user has Discord linked AND is on the server
+    const canMention = discordId ? await isUserOnServer(discordId) : false;
+    const mention = canMention ? `<@${discordId}>` : `**${username}**`;
 
     const payload = {
       content: `${mention} ranked up to **${tier.name}** ${symbol}`,
       embeds: [buildRankUpEmbed(username, tier, newElo, previousTierKey)],
       allowed_mentions: {
-        users: discordId ? [discordId] : [],
+        users: canMention && discordId ? [discordId] : [],
       },
     };
 
@@ -168,6 +187,7 @@ export async function sendRankUpWebhook(
  * Send a rank-down notification (optional, for significant drops).
  */
 export async function sendRankDownWebhook(
+  discordId: string | null,
   username: string,
   tier: RankTier,
   newElo: number,
@@ -182,11 +202,16 @@ export async function sendRankDownWebhook(
     const previousTier = RANK_TIERS.find((t) => t.key === previousTierKey);
     const prevSymbol = previousTier ? TIER_SYMBOLS[previousTier.key] || '' : '';
 
+    const canMention = discordId ? await isUserOnServer(discordId) : false;
+    const mention = canMention ? `<@${discordId}>` : `**${username}**`;
+
     const payload = {
+      content: `${mention} dropped to **${tier.name}** ${symbol}`,
+      allowed_mentions: { users: canMention && discordId ? [discordId] : [] },
       embeds: [
         {
           title: 'Rank Change',
-          description: `**${username}** dropped to **${tier.name}** ${symbol} (from ${previousTier?.name || previousTierKey} ${prevSymbol})`,
+          description: `${mention} dropped to **${tier.name}** ${symbol} (from ${previousTier?.name || previousTierKey} ${prevSymbol})`,
           color: hexToDecimal('#555555'),
           fields: [
             { name: 'New Rank', value: `${symbol} ${tier.name}`, inline: true },

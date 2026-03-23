@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { calculateElo, getLeagueTier } from '@/lib/elo/elo';
 import { syncDiscordRole } from '@/lib/discord/roleSync';
-import { sendRankUpWebhook } from '@/lib/discord/rankUpWebhook';
+import { sendRankUpWebhook, sendRankDownWebhook } from '@/lib/discord/rankUpWebhook';
 
 export async function POST(req: NextRequest) {
   try {
@@ -123,14 +123,22 @@ export async function PUT(req: NextRequest) {
           updated.placementCompleted = true;
         }
 
-        // Discord role sync if player has discord linked
-        if (updated.discordId && updated.placementCompleted) {
+        // Discord notifications and role sync
+        if (updated.placementCompleted) {
           try {
             const oldTier = getLeagueTier(oldElos[idx]);
             const newTier = getLeagueTier(newElos[idx]);
-            await syncDiscordRole(updated.discordId, updated.elo);
+            // Sync Discord role if linked
+            if (updated.discordId) {
+              await syncDiscordRole(updated.discordId, updated.elo);
+            }
+            // Send webhook notification for tier changes (mention if on server, bold name if not)
             if (oldTier.key !== newTier.key) {
-              await sendRankUpWebhook(updated.discordId, updated.username, newTier, updated.elo, oldTier.key);
+              if (newElos[idx] > oldElos[idx]) {
+                await sendRankUpWebhook(updated.discordId || null, updated.username, newTier, updated.elo, oldTier.key);
+              } else {
+                await sendRankDownWebhook(updated.discordId || null, updated.username, newTier, updated.elo, oldTier.key);
+              }
             }
           } catch (e) { console.error('Discord sync error:', e); }
         }
