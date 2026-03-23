@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import CyberBackground from '@/components/CyberBackground';
@@ -44,13 +44,11 @@ export default function HomePage() {
   const t = useTranslations('home');
   const [mounted, setMounted] = useState(false);
   const [user, setUser] = useState<{ username: string; role: string; discordId?: string; discordUsername?: string } | null>(null);
-
-  const featuredCard = useMemo(() => {
-    return FEATURED_CARDS[Math.floor(Math.random() * FEATURED_CARDS.length)];
-  }, []);
+  const [featuredCard, setFeaturedCard] = useState(FEATURED_CARDS[0]);
 
   useEffect(() => {
     setMounted(true);
+    setFeaturedCard(FEATURED_CARDS[Math.floor(Math.random() * FEATURED_CARDS.length)]);
     fetch('/api/user/me').then((r) => {
       if (r.ok) return r.json();
       return null;
