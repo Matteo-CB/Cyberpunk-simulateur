@@ -7,7 +7,7 @@ export async function sendResetEmail(email: string, token: string): Promise<bool
 
   try {
     await resend.emails.send({
-      from: 'Cyberpunk TCG <noreply@cyberpunktcgsimulator.com>',
+      from: 'Cyberpunk TCG <onboarding@resend.dev>',
       to: email,
       subject: 'Reset your password — Cyberpunk TCG Simulator',
       html: `
