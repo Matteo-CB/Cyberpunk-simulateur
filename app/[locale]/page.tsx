@@ -233,7 +233,7 @@ export default function HomePage() {
             >
               {user ? (
                 <>
-                  {/* Logged in: show username + profile/admin/logout */}
+                  {/* Row 1: Profile + Admin (if admin) + Discord */}
                   <div className="flex w-full" style={{ gap: 8 }}>
                     <Link href={`/profile/${user.username}`} style={{ flex: 1, textDecoration: 'none' }}>
                       <div
@@ -242,50 +242,51 @@ export default function HomePage() {
                         onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#00f0ff80'; e.currentTarget.style.background = 'rgba(0,240,255,0.08)'; }}
                         onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(0,240,255,0.3)'; e.currentTarget.style.background = 'rgba(0,240,255,0.04)'; }}
                       >
-                        {user.username}
+                        {t('profile')}
                       </div>
                     </Link>
-                    <button
-                      className="font-blender uppercase tracking-widest cursor-pointer"
-                      style={{ height: 42, fontSize: 10, padding: '0 16px', borderRadius: 6, border: '1px solid #262630', color: '#5a5a6a', background: 'transparent', transition: 'all 0.2s' }}
-                      onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#ff003c40'; e.currentTarget.style.color = '#ff003c'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#262630'; e.currentTarget.style.color = '#5a5a6a'; }}
-                      onClick={() => { fetch('/api/auth/csrf').then(r => r.json()).then(({ csrfToken }) => { fetch('/api/auth/signout', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: `csrfToken=${csrfToken}` }).then(() => { setUser(null); window.location.reload(); }); }).catch(() => { setUser(null); window.location.reload(); }); }}
-                    >
-                      Logout
-                    </button>
+                    {isAdmin && (
+                      <Link href="/admin" style={{ flex: 1, textDecoration: 'none' }}>
+                        <div
+                          className="flex items-center justify-center w-full font-blender uppercase tracking-widest cursor-pointer"
+                          style={{ height: 42, fontSize: 11, borderRadius: 6, border: '1px solid rgba(255,0,60,0.3)', color: '#ff003c', background: 'rgba(255,0,60,0.04)', transition: 'all 0.2s' }}
+                          onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#ff003c80'; e.currentTarget.style.background = 'rgba(255,0,60,0.08)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,0,60,0.3)'; e.currentTarget.style.background = 'rgba(255,0,60,0.04)'; }}
+                        >
+                          {t('adminPanel')}
+                        </div>
+                      </Link>
+                    )}
+                    {user.discordId ? (
+                      <div
+                        className="flex items-center justify-center font-blender"
+                        style={{ flex: 1, height: 42, fontSize: 11, borderRadius: 6, border: '1px solid rgba(88,101,242,0.2)', color: '#5865F2', background: 'rgba(88,101,242,0.04)' }}
+                      >
+                        {t('discordLinked', { name: user.discordUsername || 'Discord' })}
+                      </div>
+                    ) : (
+                      <a href="/api/user/link-discord" style={{ flex: 1, textDecoration: 'none' }}>
+                        <div
+                          className="flex items-center justify-center w-full font-blender uppercase tracking-widest cursor-pointer"
+                          style={{ height: 42, fontSize: 11, borderRadius: 6, border: '1px solid rgba(88,101,242,0.3)', color: '#5865F2', background: 'rgba(88,101,242,0.04)', transition: 'all 0.2s' }}
+                          onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#5865F280'; e.currentTarget.style.background = 'rgba(88,101,242,0.1)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(88,101,242,0.3)'; e.currentTarget.style.background = 'rgba(88,101,242,0.04)'; }}
+                        >
+                          {t('linkDiscord')}
+                        </div>
+                      </a>
+                    )}
                   </div>
-                  {isAdmin && (
-                    <Link href="/admin" style={{ textDecoration: 'none' }}>
-                      <div
-                        className="flex items-center justify-center w-full font-blender uppercase tracking-widest cursor-pointer"
-                        style={{ height: 42, fontSize: 11, borderRadius: 6, border: '1px solid rgba(255,0,60,0.3)', color: '#ff003c', background: 'rgba(255,0,60,0.04)', transition: 'all 0.2s' }}
-                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#ff003c80'; e.currentTarget.style.background = 'rgba(255,0,60,0.08)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,0,60,0.3)'; e.currentTarget.style.background = 'rgba(255,0,60,0.04)'; }}
-                      >
-                        ADMIN PANEL
-                      </div>
-                    </Link>
-                  )}
-                  {user.discordId ? (
-                    <div
-                      className="flex items-center justify-center w-full font-blender"
-                      style={{ height: 36, fontSize: 11, borderRadius: 6, border: '1px solid rgba(88,101,242,0.2)', color: '#5865F2', background: 'rgba(88,101,242,0.04)' }}
-                    >
-                      Discord: {user.discordUsername || 'Linked'}
-                    </div>
-                  ) : (
-                    <a href="/api/user/link-discord" style={{ textDecoration: 'none', width: '100%' }}>
-                      <div
-                        className="flex items-center justify-center w-full font-blender uppercase tracking-widest cursor-pointer"
-                        style={{ height: 42, fontSize: 11, borderRadius: 6, border: '1px solid rgba(88,101,242,0.3)', color: '#5865F2', background: 'rgba(88,101,242,0.04)', transition: 'all 0.2s' }}
-                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#5865F280'; e.currentTarget.style.background = 'rgba(88,101,242,0.1)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(88,101,242,0.3)'; e.currentTarget.style.background = 'rgba(88,101,242,0.04)'; }}
-                      >
-                        Link Discord
-                      </div>
-                    </a>
-                  )}
+                  {/* Row 2: Logout */}
+                  <button
+                    className="w-full font-blender uppercase tracking-widest cursor-pointer"
+                    style={{ height: 42, fontSize: 11, borderRadius: 6, border: '1px solid #262630', color: '#5a5a6a', background: 'transparent', transition: 'all 0.2s' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#ff003c40'; e.currentTarget.style.color = '#ff003c'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#262630'; e.currentTarget.style.color = '#5a5a6a'; }}
+                    onClick={() => { fetch('/api/auth/csrf').then(r => r.json()).then(({ csrfToken }) => { fetch('/api/auth/signout', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: `csrfToken=${csrfToken}` }).then(() => { setUser(null); window.location.reload(); }); }).catch(() => { setUser(null); window.location.reload(); }); }}
+                  >
+                    {t('logout')}
+                  </button>
                 </>
               ) : (
                 <div className="flex w-full" style={{ gap: 12 }}>

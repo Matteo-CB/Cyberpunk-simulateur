@@ -13,6 +13,11 @@
     "register": "S'inscrire",
     "discord": "Rejoindre Discord",
     "friends": "AMIS",
+    "profile": "PROFIL",
+    "adminPanel": "ADMIN",
+    "linkDiscord": "LIER DISCORD",
+    "discordLinked": "Discord : {name}",
+    "logout": "DECONNEXION",
     "footer": "Simulateur fan-made — Non affilie a CD Projekt Red, R. Talsorian Games ou Weird CO"
   },
   "play": {

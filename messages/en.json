@@ -13,6 +13,11 @@
     "register": "Register",
     "discord": "Join Discord",
     "friends": "FRIENDS",
+    "profile": "PROFILE",
+    "adminPanel": "ADMIN",
+    "linkDiscord": "LINK DISCORD",
+    "discordLinked": "Discord: {name}",
+    "logout": "LOGOUT",
     "footer": "Fan-made simulator — Not affiliated with CD Projekt Red, R. Talsorian Games or Weird CO"
   },
   "play": {
