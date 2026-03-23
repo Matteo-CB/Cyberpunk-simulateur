@@ -22,10 +22,11 @@ COPY --from=builder /app/server ./server
 COPY --from=builder /app/lib ./lib
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
+COPY --from=builder /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
 
 USER nextjs
-EXPOSE 3000
-ENV PORT=3000
+EXPOSE ${PORT:-3000}
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["node", "server.js"]
+CMD ["sh", "-c", "npx prisma db push --skip-generate && node server.js"]
