@@ -112,7 +112,7 @@ async function startServer() {
   });
 
   // Delegate all other requests to Next.js
-  expressApp.all('*', (req, res) => {
+  expressApp.use((req, res) => {
     return handle(req, res);
   });
 
