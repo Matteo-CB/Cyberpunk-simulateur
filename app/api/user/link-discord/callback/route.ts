@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { syncDiscordRole } from '@/lib/discord/roleSync';
 
 const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID!;
 const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET!;
@@ -54,14 +55,14 @@ export async function GET(req: NextRequest) {
   if (error) {
     console.error('[link-discord/callback] Discord OAuth error:', error);
     return NextResponse.redirect(
-      `${APP_URL}/settings?discord=error&reason=${encodeURIComponent(error)}`
+      `${APP_URL}?discord=error&reason=${encodeURIComponent(error)}`
     );
   }
 
   // Validate required params
   if (!code || !state) {
     return NextResponse.redirect(
-      `${APP_URL}/settings?discord=error&reason=missing_params`
+      `${APP_URL}?discord=error&reason=missing_params`
     );
   }
 
@@ -69,7 +70,7 @@ export async function GET(req: NextRequest) {
   const statePayload = parseStateToken(state);
   if (!statePayload) {
     return NextResponse.redirect(
-      `${APP_URL}/settings?discord=error&reason=invalid_state`
+      `${APP_URL}?discord=error&reason=invalid_state`
     );
   }
 
@@ -77,7 +78,7 @@ export async function GET(req: NextRequest) {
   const elapsed = Date.now() - statePayload.timestamp;
   if (elapsed > STATE_TTL_MS) {
     return NextResponse.redirect(
-      `${APP_URL}/settings?discord=error&reason=expired_state`
+      `${APP_URL}?discord=error&reason=expired_state`
     );
   }
 
@@ -103,7 +104,7 @@ export async function GET(req: NextRequest) {
       const errorBody = await tokenResponse.text();
       console.error('[link-discord/callback] Token exchange failed:', errorBody);
       return NextResponse.redirect(
-        `${APP_URL}/settings?discord=error&reason=token_exchange_failed`
+        `${APP_URL}?discord=error&reason=token_exchange_failed`
       );
     }
 
@@ -119,7 +120,7 @@ export async function GET(req: NextRequest) {
     if (!userResponse.ok) {
       console.error('[link-discord/callback] Failed to fetch Discord user');
       return NextResponse.redirect(
-        `${APP_URL}/settings?discord=error&reason=fetch_user_failed`
+        `${APP_URL}?discord=error&reason=fetch_user_failed`
       );
     }
 
@@ -136,7 +137,7 @@ export async function GET(req: NextRequest) {
 
     if (existingLink) {
       return NextResponse.redirect(
-        `${APP_URL}/settings?discord=error&reason=already_linked_other`
+        `${APP_URL}?discord=error&reason=already_linked_other`
       );
     }
 
@@ -152,6 +153,19 @@ export async function GET(req: NextRequest) {
         discordUsername: discordDisplayName,
       },
     });
+
+    // Sync Discord role based on current ELO
+    const userData = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { elo: true, placementCompleted: true },
+    });
+    if (userData) {
+      try {
+        await syncDiscordRole(discordUser.id, userData.elo);
+      } catch (e) {
+        console.error('[link-discord/callback] Role sync error:', e);
+      }
+    }
 
     // Create Account record for the discord provider link
     await prisma.account.upsert({
@@ -181,11 +195,11 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    return NextResponse.redirect(`${APP_URL}/settings?discord=linked`);
+    return NextResponse.redirect(`${APP_URL}?discord=linked`);
   } catch (error) {
     console.error('[link-discord/callback] Unexpected error:', error);
     return NextResponse.redirect(
-      `${APP_URL}/settings?discord=error&reason=internal_error`
+      `${APP_URL}?discord=error&reason=internal_error`
     );
   }
 }
