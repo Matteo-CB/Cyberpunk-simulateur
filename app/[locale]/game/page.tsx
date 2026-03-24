@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import GameBoard from '@/components/game/GameBoard';
+import DeckSelector from '@/components/game/DeckSelector';
 import { GameEngine } from '@/lib/engine/GameEngine';
 import { getAllCards, getCardById } from '@/lib/data/cardLoader';
 import type { GameState, GameAction, PlayerID } from '@/lib/engine/types';
@@ -23,6 +24,12 @@ export default function GamePage() {
   const socketRef = useRef<Socket | null>(null);
   const roomCodeRef = useRef<string | null>(null);
   const gameCreatedRef = useRef(false);
+  const configRef = useRef<any>(null);
+
+  // Deck selection state
+  const [showDeckSelector, setShowDeckSelector] = useState(false);
+  const [myDeck, setMyDeck] = useState<CardData[] | null>(null);
+  const [myLegends, setMyLegends] = useState<CardData[] | null>(null);
 
   // Timer state
   const [timerEnd, setTimerEnd] = useState<number | null>(null);
@@ -30,64 +37,48 @@ export default function GamePage() {
   // Game end data (ELO change from server)
   const [gameEndData, setGameEndData] = useState<{ eloChange: number | null; isRanked: boolean } | null>(null);
 
+  // Helper: generate random deck for opponent
+  const pickRandomDeck = useCallback(() => {
+    const allCards = getAllCards();
+    const nonLegends = allCards.filter((c) => c.card_type !== 'legend');
+    const deck: CardData[] = [];
+    const counts = new Map<string, number>();
+    const shuffled = [...nonLegends].sort(() => Math.random() - 0.5);
+    for (const card of shuffled) {
+      if (deck.length >= 40) break;
+      const count = counts.get(card.id) || 0;
+      if (count < 3) { deck.push(card); counts.set(card.id, count + 1); }
+    }
+    while (deck.length < 40) {
+      const card = shuffled[Math.floor(Math.random() * shuffled.length)];
+      const count = counts.get(card.id) || 0;
+      if (count < 3) { deck.push(card); counts.set(card.id, count + 1); }
+    }
+    return deck;
+  }, []);
+
+  const pickRandomLegends = useCallback(() => {
+    const allCards = getAllCards();
+    const legends = allCards.filter((c) => c.card_type === 'legend');
+    const shuffled = [...legends].sort(() => Math.random() - 0.5);
+    const picked: CardData[] = [];
+    const usedNames = new Set<string>();
+    for (const l of shuffled) {
+      if (!usedNames.has(l.name_en) && picked.length < 3) { picked.push(l); usedNames.add(l.name_en); }
+    }
+    return picked;
+  }, []);
+
   useEffect(() => {
     const configStr = sessionStorage.getItem('gameConfig');
     const config = configStr ? JSON.parse(configStr) : { mode: 'ai', difficulty: 'easy' };
+    configRef.current = config;
 
-    const allCards = getAllCards();
-    const legends = allCards.filter((c) => c.card_type === 'legend');
-    const nonLegends = allCards.filter((c) => c.card_type !== 'legend');
-
-    const pickLegends = () => {
-      const shuffled = [...legends].sort(() => Math.random() - 0.5);
-      const picked: CardData[] = [];
-      const usedNames = new Set<string>();
-      for (const l of shuffled) {
-        if (!usedNames.has(l.name_en) && picked.length < 3) { picked.push(l); usedNames.add(l.name_en); }
-      }
-      return picked;
-    };
-
-    const pickDeck = () => {
-      const deck: CardData[] = [];
-      const counts = new Map<string, number>();
-      const shuffled = [...nonLegends].sort(() => Math.random() - 0.5);
-      for (const card of shuffled) {
-        if (deck.length >= 40) break;
-        const count = counts.get(card.id) || 0;
-        if (count < 3) { deck.push(card); counts.set(card.id, count + 1); }
-      }
-      while (deck.length < 40) {
-        const card = shuffled[Math.floor(Math.random() * shuffled.length)];
-        const count = counts.get(card.id) || 0;
-        if (count < 3) { deck.push(card); counts.set(card.id, count + 1); }
-      }
-      return deck;
-    };
-
-    // ════════ AI MODE ════════
+    // Both AI and online: show deck selector first
     if (config.mode !== 'online') {
-      const initAI = async () => {
-        let p1Cards = pickDeck();
-        let p1Legends = pickLegends();
-        try {
-          const res = await fetch('/api/decks');
-          if (res.ok) {
-            const decks = await res.json();
-            if (Array.isArray(decks) && decks.length > 0) {
-              const deck = config.deckId ? decks.find((d: any) => d.id === config.deckId) || decks[0] : decks[0];
-              const cards = deck.cardIds.map((id: string) => getCardById(id)).filter(Boolean);
-              const legs = deck.legendIds.map((id: string) => getCardById(id)).filter(Boolean);
-              if (cards.length >= 40 && legs.length === 3) { p1Cards = cards; p1Legends = legs; }
-            }
-          }
-        } catch {}
-        setGameState(GameEngine.createGame(p1Cards, p1Legends, pickDeck(), pickLegends(), {
-          isAI: true, aiDifficulty: config.difficulty || 'easy',
-        }));
-        setStatus('playing');
-      };
-      initAI();
+      // AI mode: show deck selector immediately
+      setStatus('deck-select');
+      setShowDeckSelector(true);
       return;
     }
 
@@ -99,26 +90,10 @@ export default function GamePage() {
     setMyPlayer(isHost ? 'player1' : 'player2');
     setStatus('connecting');
 
-    const myDeck = pickDeck();
-    const myLegends = pickLegends();
-
-    function createAndSendGame(s: Socket, userId: string) {
-      if (gameCreatedRef.current) return;
-      gameCreatedRef.current = true;
-      const state = GameEngine.createGame(
-        myDeck, myLegends, pickDeck(), pickLegends(),
-        { player1UserId: userId }
-      );
-      setGameState(state);
-      setStatus('playing');
-      s.emit('game:state-update', { roomCode: config.roomCode, gameState: state });
-    }
-
-    // Connect socket immediately — use polling first (more reliable behind proxy)
+    // Connect socket immediately
     const s = io(SOCKET_URL, { transports: ['polling', 'websocket'] });
     socketRef.current = s;
 
-    // Fetch user in background (don't block socket connection)
     let userId = config.userId || 'anon';
     let username = config.username || 'Player';
     fetch('/api/user/me').then(r => r.ok ? r.json() : null).then(d => {
@@ -130,7 +105,6 @@ export default function GamePage() {
       s.emit('auth', { userId, username });
 
       if (isHost) {
-        // Host: CREATE the room here (not on the online page)
         console.log('[game] Creating room', config.roomCode);
         s.emit('room:create', {
           roomCode: config.roomCode, userId, username,
@@ -138,48 +112,40 @@ export default function GamePage() {
           isRanked: config.gameMode === 'ranked',
           gameMode: config.gameMode || 'casual',
         }, (res: any) => {
-          console.log('[game] Room create result:', res?.ok);
           if (!res?.ok) {
-            // Room might already exist (reconnect) — try joining instead
             s.emit('room:join', { roomCode: config.roomCode, userId, username }, (joinRes: any) => {
               if (!joinRes?.ok) { setStatus('error'); return; }
-              if (joinRes.room?.guestId && joinRes.room.guestId !== userId) {
-                createAndSendGame(s, userId);
-              } else {
-                setStatus('waiting');
-              }
+              // Show deck selector while waiting
+              setStatus('deck-select');
+              setShowDeckSelector(true);
             });
             return;
           }
-          setStatus('waiting');
+          // Show deck selector while waiting for opponent
+          setStatus('deck-select');
+          setShowDeckSelector(true);
         });
       } else {
-        // Guest: JOIN the room
         console.log('[game] Joining room', config.roomCode);
         s.emit('room:join', { roomCode: config.roomCode, userId, username }, (res: any) => {
-          console.log('[game] Room join result:', res?.ok);
           if (!res?.ok) { setStatus('error'); return; }
-          // Detect ranked mode from server room data (guest may not have it in config)
           if (res.room?.gameMode === 'ranked' || res.room?.isRanked) {
             setIsRanked(true);
           }
-          setStatus('waiting');
+          // Show deck selector
+          setStatus('deck-select');
+          setShowDeckSelector(true);
         });
       }
     });
 
     s.on('room:player-joined', () => {
       console.log('[game] Player joined event received, isHost:', isHost);
-      if (isHost) {
-        createAndSendGame(s, userId);
-      }
+      // Don't create game yet — wait for deck selection
     });
 
     s.on('game:state-update', (payload: any) => {
-      // Server sends { gameState, timestamp } — extract the actual state
       const state: GameState = payload?.gameState || payload;
-      console.log('[game] Received game state, hasP1:', !!state?.player1, 'hasP2:', !!state?.player2);
-      // Ensure all required fields exist after JSON serialization
       if (state) {
         state.effectAnimationQueue = state.effectAnimationQueue || [];
         state.endOfTurnEffects = state.endOfTurnEffects || [];
@@ -206,13 +172,13 @@ export default function GamePage() {
           }
         }
       }
-      if (!gameState) setGameState(state); // First state = initial
+      if (!gameState) setGameState(state);
       seqRef.current += 1;
       setServerState({ state, seq: seqRef.current });
       setStatus('playing');
+      setShowDeckSelector(false);
     });
 
-    // Timer events
     s.on('game:timer-start', (data: { activePlayer: string; duration: number; startedAt: number }) => {
       setTimerEnd(data.startedAt + data.duration);
     });
@@ -221,7 +187,6 @@ export default function GamePage() {
       setTimerEnd(null);
     });
 
-    // Game end event (ELO changes from server — per-player)
     s.on('game:ended', (data: any) => {
       const myEloChange = isHost ? data.player1EloChange : data.player2EloChange;
       setGameEndData({ eloChange: myEloChange ?? null, isRanked: data.isRanked });
@@ -235,9 +200,51 @@ export default function GamePage() {
     return () => { s.disconnect(); };
   }, []);
 
+  // Handle deck selection — starts the game
+  const handleDeckSelected = useCallback((cards: CardData[], legends: CardData[]) => {
+    setMyDeck(cards);
+    setMyLegends(legends);
+    setShowDeckSelector(false);
+
+    const config = configRef.current;
+    if (!config) return;
+
+    if (config.mode !== 'online') {
+      // AI mode: create game immediately
+      setGameState(GameEngine.createGame(cards, legends, pickRandomDeck(), pickRandomLegends(), {
+        isAI: true, aiDifficulty: config.difficulty || 'easy',
+      }));
+      setStatus('playing');
+      return;
+    }
+
+    // Online mode: host creates the game with selected deck
+    const s = socketRef.current;
+    if (!s) return;
+
+    const isHost = config.isHost;
+    let userId = config.userId || 'anon';
+
+    if (isHost) {
+      // Host creates game with their deck + random for opponent
+      if (!gameCreatedRef.current) {
+        gameCreatedRef.current = true;
+        const state = GameEngine.createGame(
+          cards, legends, pickRandomDeck(), pickRandomLegends(),
+          { player1UserId: userId }
+        );
+        setGameState(state);
+        setStatus('playing');
+        s.emit('game:state-update', { roomCode: config.roomCode, gameState: state });
+      }
+    } else {
+      // Guest: just wait for host to send game state
+      setStatus('waiting-game');
+    }
+  }, [pickRandomDeck, pickRandomLegends]);
+
   const handleOnlineAction = useCallback((action: GameAction) => {
     if (!socketRef.current || !roomCodeRef.current) return;
-    // Just send to server — GameBoard already applied locally
     socketRef.current.emit('game:action', { roomCode: roomCodeRef.current, action, player: myPlayer });
   }, [myPlayer]);
 
@@ -257,7 +264,24 @@ export default function GamePage() {
     </div>
   );
 
-  if (status === 'waiting' || status === 'connecting') return (
+  // Deck selection screen
+  if (showDeckSelector) return (
+    <div className="min-h-screen" style={{ background: '#0a0a12' }}>
+      {isOnline && roomCodeRef.current && (
+        <div style={{ position: 'absolute', top: 20, left: 0, right: 0, textAlign: 'center', zIndex: 10 }}>
+          <div className="font-refinery" style={{ color: '#fcee09', fontSize: 24, letterSpacing: '0.3em', textShadow: '0 0 20px rgba(252,238,9,0.3)' }}>
+            {roomCodeRef.current}
+          </div>
+          <div className="font-blender" style={{ color: '#5a6a7a', fontSize: 11, textTransform: 'uppercase', marginTop: 4 }}>
+            {isRanked ? t('game.rankedMatch') : t('game.casualMatch')}
+          </div>
+        </div>
+      )}
+      <DeckSelector onSelect={handleDeckSelected} />
+    </div>
+  );
+
+  if (status === 'waiting' || status === 'connecting' || status === 'waiting-game') return (
     <div className="flex flex-col items-center justify-center min-h-screen" style={{ background: '#0a0a12', gap: 16 }}>
       {roomCodeRef.current && (
         <div className="font-refinery" style={{ color: '#fcee09', fontSize: 36, letterSpacing: '0.3em', textShadow: '0 0 20px rgba(252,238,9,0.3)' }}>
@@ -265,7 +289,7 @@ export default function GamePage() {
         </div>
       )}
       <div className="font-blender text-sm uppercase tracking-widest animate-pulse" style={{ color: '#5a6a7a' }}>
-        {status === 'connecting' ? 'Connecting...' : 'Waiting for opponent...'}
+        {status === 'connecting' ? 'Connecting...' : status === 'waiting-game' ? t('game.waitingForHost') : 'Waiting for opponent...'}
       </div>
     </div>
   );
