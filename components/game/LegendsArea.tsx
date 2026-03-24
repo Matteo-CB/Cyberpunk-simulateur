@@ -12,6 +12,7 @@ interface LegendsAreaProps {
   canCall: boolean;
   onCall?: (index: number) => void;
   onGoSolo?: (index: number) => void;
+  compact?: boolean;
 }
 
 function getCardImagePath(card: CardData): string {
@@ -27,6 +28,7 @@ export default function LegendsArea({
   canCall,
   onCall,
   onGoSolo,
+  compact,
 }: LegendsAreaProps) {
   const t = useTranslations();
   return (
@@ -36,6 +38,8 @@ export default function LegendsArea({
         flexDirection: 'column',
         alignItems: 'center',
         gap: 4,
+        transform: compact ? 'scale(0.7)' : undefined,
+        transformOrigin: 'center center',
       }}
     >
       {legends.map((legend, i) => {

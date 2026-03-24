@@ -6,9 +6,10 @@ import type { EddyCard } from '@/lib/engine/types';
 interface EddiesAreaProps {
   eddies: EddyCard[];
   label: string;
+  compact?: boolean;
 }
 
-export default function EddiesArea({ eddies, label }: EddiesAreaProps) {
+export default function EddiesArea({ eddies, label, compact }: EddiesAreaProps) {
   const readyCount = eddies.filter((e) => !e.isSpent).length;
 
   return (
@@ -18,6 +19,8 @@ export default function EddiesArea({ eddies, label }: EddiesAreaProps) {
         flexDirection: 'column',
         alignItems: 'center',
         gap: 4,
+        transform: compact ? 'scale(0.7)' : undefined,
+        transformOrigin: 'center center',
       }}
     >
       {/* Large eddie count */}

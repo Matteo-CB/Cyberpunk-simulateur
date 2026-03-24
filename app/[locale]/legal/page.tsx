@@ -93,7 +93,7 @@ export default function LegalPage() {
           <section>
             <h2 className="font-refinery" style={sectionTitle}>Disclaimer</h2>
             <p style={bodyText}>
-              Cyberpunk TCG Simulator is a <strong style={{ color: '#e0e8f0' }}>fan-made, non-commercial project</strong> created for educational and entertainment purposes only. This simulator is <strong style={{ color: '#e0e8f0' }}>not affiliated with, endorsed by, or connected to</strong> CD Projekt Red, R. Talsorian Games, Weird CO, or any other official Cyberpunk franchise holders.
+              Cyberpunk TCG Simulator is a <strong style={{ color: '#e0e8f0' }}>fan made, non commercial project</strong> created for educational and entertainment purposes only. This simulator is <strong style={{ color: '#e0e8f0' }}>not affiliated with, endorsed by, or connected to</strong> CD Projekt Red, R. Talsorian Games, Weird CO, or any other official Cyberpunk franchise holders.
             </p>
             <p style={{ ...bodyText, marginTop: 10 }}>
               This project does not generate any revenue and is provided free of charge to the community. No commercial use is intended.
@@ -259,7 +259,7 @@ export default function LegalPage() {
             }}
           >
             <p>
-              Cyberpunk TCG Simulator | Fan-made project by{' '}
+              Cyberpunk TCG Simulator | Fan made project by{' '}
               <a
                 href="https://hiddenlab.fr"
                 target="_blank"

@@ -10,6 +10,7 @@ import { calculateEffectivePower } from '@/lib/engine/utils';
 interface PlayerFieldProps {
   units: UnitOnField[];
   isOwner: boolean;
+  compact?: boolean;
   targetableIds?: string[];
   pendingTargetIds?: string[];
   spendableUnitIds?: string[];
@@ -32,6 +33,7 @@ function getCardImagePath(card: CardData): string {
 export default function PlayerField({
   units,
   isOwner,
+  compact,
   targetableIds = [],
   pendingTargetIds,
   spendableUnitIds,
@@ -41,6 +43,8 @@ export default function PlayerField({
 }: PlayerFieldProps) {
   const t = useTranslations();
   const locale = useLocale();
+  const cardW = compact ? 46 : 70;
+  const cardH = compact ? 64 : 98;
   if (units.length === 0) {
     return (
       <div
@@ -48,7 +52,7 @@ export default function PlayerField({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          minHeight: 110,
+          minHeight: compact ? 70 : 110,
           padding: '8px 12px',
           border: '2px dashed #2a2a3a',
           borderRadius: 8,
@@ -76,11 +80,11 @@ export default function PlayerField({
         display: 'flex',
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: 10,
+        gap: compact ? 5 : 10,
         alignItems: 'flex-end',
         justifyContent: 'center',
-        minHeight: 110,
-        padding: '6px 8px',
+        minHeight: compact ? 70 : 110,
+        padding: compact ? '3px 4px' : '6px 8px',
       }}
     >
       {units.map((unit) => {
@@ -115,7 +119,7 @@ export default function PlayerField({
             key={unit.instanceId}
             style={{
               position: 'relative',
-              width: 70,
+              width: cardW,
               cursor: onSelectUnit ? 'pointer' : 'default',
             }}
             whileHover={onSelectUnit ? { y: -4, scale: 1.04 } : undefined}
@@ -125,8 +129,8 @@ export default function PlayerField({
             <motion.div
               style={{
                 position: 'relative',
-                width: 70,
-                height: 98,
+                width: cardW,
+                height: cardH,
                 borderRadius: 6,
                 overflow: 'hidden',
                 border: `2px solid ${borderColor}`,
@@ -175,7 +179,7 @@ export default function PlayerField({
                 alt={locale === 'fr' ? unit.card.name_fr : unit.card.name_en}
                 fill
                 style={{ objectFit: 'cover' }}
-                sizes="70px"
+                sizes={`${cardW}px`}
               />
 
               {/* "DEPLOYED" overlay for units played this turn */}

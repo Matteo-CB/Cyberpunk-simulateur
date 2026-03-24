@@ -6,16 +6,17 @@ import { useTranslations } from 'next-intl';
 interface DeckPileProps {
   count: number;
   label?: string;
+  compact?: boolean;
 }
 
-export default function DeckPile({ count, label }: DeckPileProps) {
+export default function DeckPile({ count, label, compact }: DeckPileProps) {
   const t = useTranslations();
   const displayLabel = label ?? t('game.deck').toUpperCase();
   // Show stacked card backs (max 4 visible layers)
   const layers = Math.min(count, 4);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, transform: compact ? 'scale(0.7)' : undefined, transformOrigin: 'center center' }}>
       <div style={{ position: 'relative', width: 52, height: 72 }}>
         {layers === 0 ? (
           <div style={{

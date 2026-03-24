@@ -3,11 +3,12 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Cyberpunk TCG Simulator',
-  description: 'Fan-made Cyberpunk Trading Card Game Simulator — Play the Cyberpunk TCG online. Built by HiddenLab.',
+  description: 'Fan made Cyberpunk Trading Card Game Simulator. Play the Cyberpunk TCG online with friends. Built by HiddenLab.',
   authors: [{ name: 'HiddenLab', url: 'https://hiddenlab.fr' }],
+  manifest: '/site.webmanifest',
   icons: {
     icon: [
-      { url: '/icons/favicon.ico', sizes: 'any' },
+      { url: '/favicon.ico', sizes: 'any' },
       { url: '/icons/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
       { url: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
       { url: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/png' },

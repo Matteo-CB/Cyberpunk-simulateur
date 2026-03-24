@@ -22,13 +22,14 @@ interface FixerAreaProps {
   dice: GigDie[];
   canChoose: boolean;
   onChoose: (index: number) => void;
+  compact?: boolean;
 }
 
-export default function FixerArea({ dice, canChoose, onChoose }: FixerAreaProps) {
+export default function FixerArea({ dice, canChoose, onChoose, compact }: FixerAreaProps) {
   const t = useTranslations();
   if (dice.length === 0) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, transform: compact ? 'scale(0.7)' : undefined, transformOrigin: 'center center' }}>
         <span style={{ fontFamily: 'var(--font-blender)', fontSize: 9, color: '#3a3a4a', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
           {t('game.noDice')}
         </span>
@@ -37,7 +38,7 @@ export default function FixerArea({ dice, canChoose, onChoose }: FixerAreaProps)
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, transform: compact ? 'scale(0.7)' : undefined, transformOrigin: 'center center' }}>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, justifyContent: 'center' }}>
         {dice.map((die, i) => {
           const isD20Last = die.type === 'd20' && dice.length > 1;

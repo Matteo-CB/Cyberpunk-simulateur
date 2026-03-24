@@ -10,9 +10,10 @@ import type { CardData } from '@/lib/data/types';
 interface TrashPileProps {
   cards: CardData[];
   label?: string;
+  compact?: boolean;
 }
 
-export default function TrashPile({ cards, label }: TrashPileProps) {
+export default function TrashPile({ cards, label, compact }: TrashPileProps) {
   const t = useTranslations();
   const displayLabel = label ?? t('game.trash').toUpperCase();
   const [showModal, setShowModal] = useState(false);
@@ -21,7 +22,7 @@ export default function TrashPile({ cards, label }: TrashPileProps) {
   return (
     <>
       <div
-        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: cards.length > 0 ? 'pointer' : 'default' }}
+        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: cards.length > 0 ? 'pointer' : 'default', transform: compact ? 'scale(0.7)' : undefined, transformOrigin: 'center center' }}
         onClick={() => cards.length > 0 && setShowModal(true)}
       >
         <div style={{ position: 'relative', width: 52, height: 72 }}>

@@ -73,6 +73,15 @@ interface GameBoardProps {
 export default function GameBoard({ initialState, myPlayer, onAction, isOnline, isRanked, serverState, turnTimerEnd, eloChange }: GameBoardProps) {
   const t = useTranslations();
   const locale = useLocale();
+
+  // Mobile detection
+  const [compact, setCompact] = useState(false);
+  useEffect(() => {
+    const check = () => setCompact(window.innerWidth < 640);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
   const PHASE_LABELS: Record<GamePhase, string> = {
     setup: t('game.phaseSetup'), mulligan: t('game.phaseMulligan'), ready: t('game.phaseReady'),
     play: t('game.phasePlay'), attack: t('game.phaseAttack'), defense: t('game.phaseDefense'), gameOver: t('game.phaseGameOver'),
@@ -266,29 +275,29 @@ export default function GameBoard({ initialState, myPlayer, onAction, isOnline, 
 
     return (
       <div style={{
-        display: 'flex', gap: 6, flex: 1, minHeight: 0,
+        display: 'flex', gap: compact ? 3 : 6, flex: 1, minHeight: 0,
         flexDirection: mirrored ? 'row-reverse' : 'row',
         alignItems: 'stretch',
       }}>
         {/* Deck + Trash stack */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 70, alignItems: 'center', justifyContent: 'center' }}>
-          <DeckPile count={player.deck.length} />
-          <TrashPile cards={player.trash} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: compact ? 3 : 6, minWidth: compact ? 44 : 70, alignItems: 'center', justifyContent: 'center' }}>
+          <DeckPile count={player.deck.length} compact={compact} />
+          <TrashPile cards={player.trash} compact={compact} />
         </div>
 
         {/* Legends */}
-        <Zone label={t('game.legends').toUpperCase()} style={{ padding: 8, minWidth: 90, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Zone label={t('game.legends').toUpperCase()} style={{ padding: compact ? 4 : 8, minWidth: compact ? 54 : 90, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <LegendsArea
-            legends={player.legends} isOwner={isOwner} canCall={canCall}
+            legends={player.legends} isOwner={isOwner} canCall={canCall} compact={compact}
             onCall={isOwner ? (i) => performAction({ type: 'CALL_LEGEND', legendIndex: i }) : undefined}
             onGoSolo={isOwner ? (i) => performAction({ type: 'GO_SOLO', legendIndex: i }) : undefined}
           />
         </Zone>
 
         {/* Field (main area) */}
-        <Zone label={isOwner ? t('game.yourField') : t('game.rivalField')} style={{ padding: 8, flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Zone label={isOwner ? t('game.yourField') : t('game.rivalField')} style={{ padding: compact ? 4 : 8, flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <PlayerField
-            units={player.field} isOwner={isOwner}
+            units={player.field} isOwner={isOwner} compact={compact}
             targetableIds={isOwner ? [] : (selectedAttacker ? targetableOppIds : [])}
             selectedId={isOwner ? selectedAttacker || undefined : undefined}
             pendingTargetIds={
@@ -352,25 +361,27 @@ export default function GameBoard({ initialState, myPlayer, onAction, isOnline, 
         </Zone>
 
         {/* Eddies + Fixer */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <Zone label={t('game.eddies').toUpperCase()} style={{ padding: 6, minWidth: 75, flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <EddiesArea eddies={player.eddies} label="" />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: compact ? 2 : 4 }}>
+          <Zone label={t('game.eddies').toUpperCase()} style={{ padding: compact ? 3 : 6, minWidth: compact ? 48 : 75, flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <EddiesArea eddies={player.eddies} label="" compact={compact} />
           </Zone>
-          <Zone label={t('game.fixer').toUpperCase()} style={{ padding: 6, minWidth: 75, flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Zone label={t('game.fixer').toUpperCase()} style={{ padding: compact ? 3 : 6, minWidth: compact ? 48 : 75, flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <FixerArea
               dice={player.fixerArea}
               canChoose={isOwner && gameState.phase === 'ready' && isMyTurn}
               onChoose={isOwner ? (i) => performAction({ type: 'CHOOSE_GIG_DIE', dieIndex: i }) : () => {}}
+              compact={compact}
             />
           </Zone>
         </div>
 
         {/* Gig Dice */}
-        <Zone label={isOwner ? t('game.yourGigs') : t('game.rivalGigs')} style={{ padding: 8, minWidth: 110, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Zone label={isOwner ? t('game.yourGigs') : t('game.rivalGigs')} style={{ padding: compact ? 4 : 8, minWidth: compact ? 70 : 110, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <GigArea
             dice={player.gigArea}
             streetCred={player.streetCred}
             label=""
+            compact={compact}
             selectableIndices={
               gameState.pendingActions[0]?.type === 'SELECT_GIG' &&
               gameState.pendingActions[0]?.player === myPlayer &&
@@ -400,19 +411,19 @@ export default function GameBoard({ initialState, myPlayer, onAction, isOnline, 
     name: string; isActive: boolean; deck: number; trash: number; gigs: number; sc: number; isTop: boolean;
   }) => (
     <div className="flex items-center justify-between" style={{
-      padding: '5px 12px',
+      padding: compact ? '3px 6px' : '5px 12px',
       background: 'rgba(252,238,9,0.02)',
       [isTop ? 'borderBottom' : 'borderTop']: `1px solid ${GOLD_DIM}`,
     }}>
-      <div className="flex items-center" style={{ gap: 8 }}>
-        <div style={{ width: 5, height: 5, borderRadius: '50%', background: isActive ? phaseColor : '#333', boxShadow: isActive ? `0 0 6px ${phaseColor}` : 'none' }} />
-        <span className="font-blender" style={{ fontSize: 11, color: isActive ? '#e0e8f0' : '#555', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{name}</span>
+      <div className="flex items-center" style={{ gap: compact ? 4 : 8 }}>
+        <div style={{ width: compact ? 4 : 5, height: compact ? 4 : 5, borderRadius: '50%', background: isActive ? phaseColor : '#333', boxShadow: isActive ? `0 0 6px ${phaseColor}` : 'none' }} />
+        <span className="font-blender" style={{ fontSize: compact ? 9 : 11, color: isActive ? '#e0e8f0' : '#555', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{name}</span>
       </div>
-      <div className="flex items-center" style={{ gap: 10 }}>
-        <span className="font-blender" style={{ fontSize: 12, fontWeight: 700, color: gigs >= WIN_GIG_COUNT ? (isTop ? '#ff003c' : '#22c55e') : GOLD }}>
+      <div className="flex items-center" style={{ gap: compact ? 6 : 10 }}>
+        <span className="font-blender" style={{ fontSize: compact ? 10 : 12, fontWeight: 700, color: gigs >= WIN_GIG_COUNT ? (isTop ? '#ff003c' : '#22c55e') : GOLD }}>
           {gigs}/{WIN_GIG_COUNT} GIGS
         </span>
-        <span className="font-blender" style={{ fontSize: 12, fontWeight: 700, color: GOLD }}>
+        <span className="font-blender" style={{ fontSize: compact ? 10 : 12, fontWeight: 700, color: GOLD }}>
           &#9733; {sc}
         </span>
       </div>
@@ -430,13 +441,13 @@ export default function GameBoard({ initialState, myPlayer, onAction, isOnline, 
       }} />
 
       {/* Main */}
-      <div className="flex flex-col flex-1 min-w-0" style={{ padding: 6 }}>
+      <div className="flex flex-col flex-1 min-w-0" style={{ padding: compact ? 2 : 6 }}>
 
         {/* ═══ OPPONENT INFO ═══ */}
         <InfoBar name={t('game.opponent')} isActive={!isMyTurn} deck={opp.deck.length} trash={opp.trash.length} gigs={opp.gigArea.length} sc={opp.streetCred} isTop={true} />
 
         {/* ═══ OPPONENT HAND (card-backs fanned at top) ═══ */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px 0', minHeight: 60 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: compact ? '2px 0' : '4px 0', minHeight: compact ? 36 : 60 }}>
           <OpponentHand cardCount={opp.hand.length} />
         </div>
 
@@ -487,7 +498,7 @@ export default function GameBoard({ initialState, myPlayer, onAction, isOnline, 
         </div>
 
         {/* ═══ YOUR HAND ═══ */}
-        <Zone label={t('game.yourHand')} style={{ padding: '4px 8px', height: 130, marginTop: 3, overflow: 'hidden' }}>
+        <Zone label={t('game.yourHand')} style={{ padding: compact ? '2px 4px' : '4px 8px', height: compact ? 85 : 130, marginTop: compact ? 1 : 3, overflow: 'hidden' }}>
           <PlayerHand
             cards={me.hand} selectedIndex={selectedCardIndex} playableIndices={playableIndices}
             onSelectCard={(i) => {

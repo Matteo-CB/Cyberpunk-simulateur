@@ -17,6 +17,7 @@ interface GigAreaProps {
   dice: GigDie[];
   streetCred: number;
   label: string;
+  compact?: boolean;
   isSelectable?: boolean;
   selectableIndices?: number[];
   onSelectDie?: (index: number) => void;
@@ -399,14 +400,16 @@ function Die3D({ die, index, isSelectable, onSelectDie }: {
   return renderDie();
 }
 
-export default function GigArea({ dice, streetCred, label, isSelectable, selectableIndices, onSelectDie }: GigAreaProps) {
+export default function GigArea({ dice, streetCred, label, compact, isSelectable, selectableIndices, onSelectDie }: GigAreaProps) {
   const t = useTranslations();
   return (
     <div style={{
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      gap: 6,
+      gap: compact ? 3 : 6,
+      transform: compact ? 'scale(0.65)' : undefined,
+      transformOrigin: 'center center',
     }}>
       {/* Label */}
       <div style={{
