@@ -163,6 +163,33 @@ export default function GamePage() {
 
     s.on('game:state-update', (state: GameState) => {
       console.log('[game] Received game state');
+      // Ensure all required fields exist after JSON serialization
+      if (state) {
+        state.effectAnimationQueue = state.effectAnimationQueue || [];
+        state.endOfTurnEffects = state.endOfTurnEffects || [];
+        state.pendingActions = state.pendingActions || [];
+        state.pendingEffects = state.pendingEffects || [];
+        state.log = state.log || [];
+        state.passiveTrackers = state.passiveTrackers || {
+          a001_firstArasakaAttack: { player1: false, player2: false },
+          a002_firstBlueCard: { player1: false, player2: false },
+          b111_firstSteal: { player1: false, player2: false },
+          b125_goroSpendUsed: { player1: false, player2: false },
+          b121_removedFromGame: { player1: false, player2: false },
+        };
+        for (const p of [state.player1, state.player2]) {
+          if (p) {
+            p.hand = p.hand || [];
+            p.deck = p.deck || [];
+            p.field = p.field || [];
+            p.trash = p.trash || [];
+            p.legends = p.legends || [];
+            p.eddies = p.eddies || [];
+            p.fixerArea = p.fixerArea || [];
+            p.gigArea = p.gigArea || [];
+          }
+        }
+      }
       setGameState(state);
       setStatus('playing');
     });
