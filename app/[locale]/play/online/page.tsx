@@ -127,16 +127,9 @@ export default function PlayOnlinePage() {
 
   const handleJoin = useCallback((code: string) => {
     if (!socket || !user) return;
-    socket.emit('room:join', { roomCode: code, userId: user.id, username: user.username },
-      (res: { ok: boolean; error?: string }) => {
-        if (res.ok) {
-          sessionStorage.setItem('gameConfig', JSON.stringify({ mode: 'online', roomCode: code, isHost: false }));
-          router.push('/game');
-        } else {
-          setError(res.error || 'Failed to join room');
-        }
-      });
-  }, [socket, user, router]);
+    sessionStorage.setItem('gameConfig', JSON.stringify({ mode: 'online', roomCode: code, isHost: false }));
+    router.push('/game');
+  }, [user, router]);
 
   const casualRooms = publicRooms.filter((r) => r.gameMode === 'casual');
   const rankedRooms = publicRooms.filter((r) => r.gameMode === 'ranked');
