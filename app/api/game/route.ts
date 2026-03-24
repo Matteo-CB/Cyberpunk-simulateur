@@ -13,6 +13,9 @@ function isInternalRequest(req: NextRequest): boolean {
 
 export async function POST(req: NextRequest) {
   try {
+    // Read body FIRST before auth() to avoid "body already consumed" errors
+    const body = await req.json();
+
     // Allow internal server calls (Socket.IO) or authenticated users
     if (!isInternalRequest(req)) {
       const session = await auth();
@@ -21,7 +24,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const { player1Id, player2Id, isAiGame, aiDifficulty, gameState, isRanked } = await req.json();
+    const { player1Id, player2Id, isAiGame, aiDifficulty, gameState, isRanked } = body;
 
     if (!player1Id) {
       return NextResponse.json({ error: 'player1Id is required' }, { status: 400 });
@@ -52,6 +55,9 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
+    // Read body FIRST before auth() to avoid "body already consumed" errors
+    const body = await req.json();
+
     // Allow internal server calls (Socket.IO) or authenticated users
     if (!isInternalRequest(req)) {
       const session = await auth();
@@ -60,7 +66,7 @@ export async function PUT(req: NextRequest) {
       }
     }
 
-    const { id, winnerId, player1Score, player2Score } = await req.json();
+    const { id, winnerId, player1Score, player2Score } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Game id is required' }, { status: 400 });
