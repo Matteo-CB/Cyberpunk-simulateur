@@ -64,7 +64,7 @@ interface GameBoardProps {
   myPlayer: PlayerID;
   onAction?: (action: GameAction) => void;
   isOnline?: boolean;
-  serverState?: GameState | null;
+  serverState?: { state: GameState; seq: number } | null;
 }
 
 export default function GameBoard({ initialState, myPlayer, onAction, isOnline, serverState }: GameBoardProps) {
@@ -75,18 +75,12 @@ export default function GameBoard({ initialState, myPlayer, onAction, isOnline, 
     play: t('game.phasePlay'), attack: t('game.phaseAttack'), defense: t('game.phaseDefense'), gameOver: t('game.phaseGameOver'),
   };
   const [gameState, setGameState] = useState<GameState>(initialState);
-  // Sync with server state in online mode
-  const serverStateRef = useRef<number>(0);
+  // Sync with server state in online mode — server is always authoritative
   useEffect(() => {
-    if (serverState && serverState.turn !== undefined) {
-      // Only update if server state is different (avoid overriding local optimistic updates needlessly)
-      const serverKey = `${serverState.turn}-${serverState.phase}-${serverState.activePlayer}-${serverState.player1.hand.length}-${serverState.player2.hand.length}`;
-      const localKey = `${gameState.turn}-${gameState.phase}-${gameState.activePlayer}-${gameState.player1.hand.length}-${gameState.player2.hand.length}`;
-      if (serverKey !== localKey) {
-        setGameState(serverState);
-      }
+    if (serverState?.state?.player1 && serverState?.state?.player2) {
+      setGameState(serverState.state);
     }
-  }, [serverState]);
+  }, [serverState?.seq]);
   const [selectedCardIndex, setSelectedCardIndex] = useState<number | null>(null);
   const [hoveredCard, setHoveredCard] = useState<CardData | null>(null);
   const [previewCard, setPreviewCard] = useState<CardData | null>(null);

@@ -14,7 +14,8 @@ const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3000'
 export default function GamePage() {
   const t = useTranslations();
   const [gameState, setGameState] = useState<GameState | null>(null);
-  const [serverState, setServerState] = useState<GameState | null>(null);
+  const [serverState, setServerState] = useState<{ state: GameState; seq: number } | null>(null);
+  const seqRef = useRef(0);
   const [myPlayer, setMyPlayer] = useState<PlayerID>('player1');
   const [isOnline, setIsOnline] = useState(false);
   const [status, setStatus] = useState<string>('loading');
@@ -194,7 +195,8 @@ export default function GamePage() {
         }
       }
       if (!gameState) setGameState(state); // First state = initial
-      setServerState(state);
+      seqRef.current += 1;
+      setServerState({ state, seq: seqRef.current });
       setStatus('playing');
     });
 
