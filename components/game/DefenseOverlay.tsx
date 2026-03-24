@@ -93,8 +93,8 @@ export default function DefenseOverlay({ gameState, myPlayer, onUseBlocker, onCa
         animate={{ scale: 1, opacity: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 300, damping: 22 }}
         style={{
-          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16,
-          padding: '28px 28px 22px', position: 'relative',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'clamp(10px, 2.5vw, 16px)',
+          padding: 'clamp(16px, 4vw, 28px) clamp(14px, 3vw, 28px) clamp(12px, 3vw, 22px)', position: 'relative',
           background: 'linear-gradient(180deg, #0d0d1a 0%, #0a0a12 100%)',
           border: '1px solid rgba(255,0,60,0.2)',
           borderRadius: 16, maxWidth: 500, width: '94%',
@@ -134,7 +134,7 @@ export default function DefenseOverlay({ gameState, myPlayer, onUseBlocker, onCa
         </motion.div>
 
         {/* Battle display */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(8px, 2.5vw, 16px)', marginTop: 8 }}>
           {/* Attacker */}
           <motion.div
             initial={{ x: -40, opacity: 0 }}
@@ -143,7 +143,7 @@ export default function DefenseOverlay({ gameState, myPlayer, onUseBlocker, onCa
             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}
           >
             <div style={{
-              position: 'relative', width: 90, height: 126, borderRadius: 8, overflow: 'hidden',
+              position: 'relative', width: 'clamp(55px, 15vw, 90px)', height: 'clamp(77px, 21vw, 126px)', borderRadius: 8, overflow: 'hidden',
             }}>
               <div style={{
                 position: 'absolute', inset: -10,
@@ -158,7 +158,7 @@ export default function DefenseOverlay({ gameState, myPlayer, onUseBlocker, onCa
               }}>
                 <Image
                   src={`/images/cards/${getCardSet(attacker.card.id)}/${attacker.card.id}.webp`}
-                  alt={locale === 'fr' ? attacker.card.name_fr : attacker.card.name_en} fill style={{ objectFit: 'cover' }} sizes="90px"
+                  alt={locale === 'fr' ? attacker.card.name_fr : attacker.card.name_en} fill style={{ objectFit: 'cover' }} sizes="(max-width: 640px) 55px, 90px"
                 />
               </div>
             </div>
@@ -197,7 +197,7 @@ export default function DefenseOverlay({ gameState, myPlayer, onUseBlocker, onCa
             {target ? (
               <>
                 <div style={{
-                  position: 'relative', width: 90, height: 126, borderRadius: 8, overflow: 'hidden',
+                  position: 'relative', width: 'clamp(55px, 15vw, 90px)', height: 'clamp(77px, 21vw, 126px)', borderRadius: 8, overflow: 'hidden',
                 }}>
                   <div style={{
                     position: 'absolute', inset: -10,
@@ -211,7 +211,7 @@ export default function DefenseOverlay({ gameState, myPlayer, onUseBlocker, onCa
                   }}>
                     <Image
                       src={`/images/cards/${getCardSet(target.card.id)}/${target.card.id}.webp`}
-                      alt={locale === 'fr' ? target.card.name_fr : target.card.name_en} fill style={{ objectFit: 'cover' }} sizes="90px"
+                      alt={locale === 'fr' ? target.card.name_fr : target.card.name_en} fill style={{ objectFit: 'cover' }} sizes="(max-width: 640px) 55px, 90px"
                     />
                   </div>
                 </div>
@@ -261,7 +261,7 @@ export default function DefenseOverlay({ gameState, myPlayer, onUseBlocker, onCa
           {t('effect.countermeasures')}
         </motion.span>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(6px, 1.5vw, 8px)', width: '100%' }}>
           {/* Blockers */}
           {!isUnblockable && blockers.map((blocker, i) => (
             <motion.button
@@ -274,7 +274,7 @@ export default function DefenseOverlay({ gameState, myPlayer, onUseBlocker, onCa
               onClick={() => onUseBlocker(blocker.instanceId)}
               style={{
                 display: 'flex', alignItems: 'center', gap: 12,
-                padding: '10px 14px',
+                padding: 'clamp(8px, 2vw, 10px) clamp(10px, 2.5vw, 14px)',
                 background: 'linear-gradient(90deg, rgba(34,197,94,0.06) 0%, transparent 100%)',
                 border: '1px solid rgba(34,197,94,0.25)',
                 borderRadius: 8, cursor: 'pointer', width: '100%',
@@ -330,7 +330,7 @@ export default function DefenseOverlay({ gameState, myPlayer, onUseBlocker, onCa
               onClick={() => onCallLegend(index)}
               style={{
                 display: 'flex', alignItems: 'center', gap: 12,
-                padding: '10px 14px',
+                padding: 'clamp(8px, 2vw, 10px) clamp(10px, 2.5vw, 14px)',
                 background: 'linear-gradient(90deg, rgba(255,215,0,0.05) 0%, transparent 100%)',
                 border: '1px solid rgba(255,215,0,0.2)',
                 borderRadius: 8, cursor: 'pointer', width: '100%',
@@ -360,7 +360,7 @@ export default function DefenseOverlay({ gameState, myPlayer, onUseBlocker, onCa
             whileTap={{ scale: 0.97 }}
             onClick={onDecline}
             style={{
-              padding: '12px 14px',
+              padding: 'clamp(8px, 2vw, 12px) clamp(10px, 2.5vw, 14px)',
               background: 'linear-gradient(90deg, rgba(255,0,60,0.06) 0%, transparent 100%)',
               border: '1px solid rgba(255,0,60,0.2)',
               borderRadius: 8, cursor: 'pointer', width: '100%',

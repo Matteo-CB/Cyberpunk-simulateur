@@ -152,8 +152,9 @@ export default function TargetSelector({ pendingAction, gameState, myPlayer, onS
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 350, damping: 22 }}
           style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16,
-            padding: '28px 24px', position: 'relative',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'clamp(10px, 2.5vw, 16px)',
+            padding: 'clamp(16px, 4vw, 28px) clamp(12px, 3vw, 24px)', position: 'relative',
+            maxHeight: '92vh', overflowY: 'auto',
             background: 'linear-gradient(180deg, #0d0d1a 0%, #0a0a14 100%)',
             border: '1px solid rgba(0,240,255,0.2)', borderRadius: 16,
             boxShadow: '0 0 60px rgba(0,240,255,0.1), 0 20px 60px rgba(0,0,0,0.8)',
@@ -181,7 +182,7 @@ export default function TargetSelector({ pendingAction, gameState, myPlayer, onS
               initial={{ rotateY: 180, opacity: 0 }}
               animate={{ rotateY: 0, opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.6 }}
-              style={{ position: 'relative', width: 140, height: 196, borderRadius: 8, overflow: 'hidden', perspective: 600 }}
+              style={{ position: 'relative', width: 'clamp(80px, 22vw, 140px)', height: 'clamp(112px, 31vw, 196px)', borderRadius: 8, overflow: 'hidden', perspective: 600 }}
             >
               <div style={{
                 position: 'absolute', inset: -15,
@@ -194,7 +195,7 @@ export default function TargetSelector({ pendingAction, gameState, myPlayer, onS
                 border: '2px solid rgba(0,240,255,0.4)',
                 boxShadow: '0 0 30px rgba(0,240,255,0.15)',
               }}>
-                <Image src={`/images/cards/${cSet}/${legend.card.id}.webp`} alt={locale === 'fr' ? legend.card.name_fr : legend.card.name_en} fill style={{ objectFit: 'cover' }} sizes="140px" />
+                <Image src={`/images/cards/${cSet}/${legend.card.id}.webp`} alt={locale === 'fr' ? legend.card.name_fr : legend.card.name_en} fill style={{ objectFit: 'cover' }} sizes="(max-width: 640px) 80px, 140px" />
                 <motion.div
                   animate={{ y: [-200, 200] }}
                   transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 0.5 }}
@@ -223,7 +224,7 @@ export default function TargetSelector({ pendingAction, gameState, myPlayer, onS
               fontFamily: 'var(--font-refinery), sans-serif', fontSize: 13,
               color: '#00f0ff', background: 'rgba(0,240,255,0.08)',
               border: '1px solid rgba(0,240,255,0.3)', borderRadius: 8,
-              padding: '10px 32px', cursor: 'pointer',
+              padding: 'clamp(8px, 2vw, 10px) clamp(16px, 4vw, 32px)', cursor: 'pointer',
               textTransform: 'uppercase', letterSpacing: '0.15em',
             }}
           >
@@ -246,8 +247,8 @@ export default function TargetSelector({ pendingAction, gameState, myPlayer, onS
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 350, damping: 24 }}
           style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14,
-            padding: '28px 20px 20px', position: 'relative',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'clamp(8px, 2vw, 14px)',
+            padding: 'clamp(16px, 4vw, 28px) clamp(12px, 3vw, 20px) clamp(12px, 3vw, 20px)', position: 'relative',
             background: 'linear-gradient(180deg, #0d0d1a 0%, #0a0a14 100%)',
             border: '1px solid rgba(252,238,9,0.15)', borderRadius: 16,
             maxWidth: 520, width: '94%', maxHeight: '82vh', overflow: 'auto',
@@ -257,7 +258,7 @@ export default function TargetSelector({ pendingAction, gameState, myPlayer, onS
           <Corners color="#fcee09" />
           <CardHeader color="#fcee09" badge={t('effect.select')} />
 
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, justifyContent: 'center', marginTop: 4 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'clamp(6px, 1.5vw, 10px)', justifyContent: 'center', marginTop: 4 }}>
             {options.map((option, i) => {
               if (option === 'decline') {
                 return (
@@ -273,7 +274,7 @@ export default function TargetSelector({ pendingAction, gameState, myPlayer, onS
                       fontFamily: 'var(--font-blender), sans-serif',
                       fontSize: 12, fontWeight: 700, color: '#5a5a6a',
                       background: 'transparent', border: '1px solid #2a2a3a',
-                      borderRadius: 6, padding: '8px 20px', cursor: 'pointer',
+                      borderRadius: 6, padding: 'clamp(6px, 1.5vw, 8px) clamp(12px, 3vw, 20px)', cursor: 'pointer',
                       textTransform: 'uppercase',
                     }}
                   >
@@ -299,12 +300,12 @@ export default function TargetSelector({ pendingAction, gameState, myPlayer, onS
                   style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: 'pointer' }}
                 >
                   <div style={{
-                    position: 'relative', width: 76, height: 106, borderRadius: 6, overflow: 'hidden',
+                    position: 'relative', width: 'clamp(52px, 14vw, 76px)', height: 'clamp(73px, 19.5vw, 106px)', borderRadius: 6, overflow: 'hidden',
                     border: isSelected ? '2px solid #ffd700' : '1px solid #2a2a3a',
                     boxShadow: isSelected ? '0 0 16px rgba(255,215,0,0.4)' : '0 4px 12px rgba(0,0,0,0.4)',
                     transition: 'all 0.2s',
                   }}>
-                    <Image src={`/images/cards/${cSet}/${cardId}.webp`} alt={label} fill style={{ objectFit: 'cover' }} sizes="76px" />
+                    <Image src={`/images/cards/${cSet}/${cardId}.webp`} alt={label} fill style={{ objectFit: 'cover' }} sizes="(max-width: 640px) 52px, 76px" />
                     {isSelected && (
                       <div style={{
                         position: 'absolute', inset: 0,
@@ -317,7 +318,7 @@ export default function TargetSelector({ pendingAction, gameState, myPlayer, onS
                   <span style={{
                     fontFamily: 'var(--font-blender), sans-serif',
                     fontSize: 9, color: isSelected ? '#ffd700' : '#6a7a8a',
-                    textAlign: 'center', maxWidth: 76,
+                    textAlign: 'center', maxWidth: 'clamp(52px, 14vw, 76px)',
                     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                   }}>
                     {label}
@@ -337,7 +338,7 @@ export default function TargetSelector({ pendingAction, gameState, myPlayer, onS
                 color: canConfirm ? '#22c55e' : '#3a3a4a',
                 background: canConfirm ? 'rgba(34,197,94,0.08)' : 'transparent',
                 border: `1px solid ${canConfirm ? 'rgba(34,197,94,0.4)' : '#1e2030'}`,
-                borderRadius: 8, padding: '8px 28px', cursor: canConfirm ? 'pointer' : 'default',
+                borderRadius: 8, padding: 'clamp(6px, 1.5vw, 8px) clamp(16px, 4vw, 28px)', cursor: canConfirm ? 'pointer' : 'default',
                 textTransform: 'uppercase', letterSpacing: '0.1em',
               }}
             >
@@ -354,7 +355,7 @@ export default function TargetSelector({ pendingAction, gameState, myPlayer, onS
                 fontFamily: 'var(--font-blender), sans-serif',
                 fontSize: 11, color: '#4a4a5a', background: 'transparent',
                 border: '1px solid #1e2030', borderRadius: 6,
-                padding: '6px 18px', cursor: 'pointer', textTransform: 'uppercase',
+                padding: 'clamp(4px, 1vw, 6px) clamp(10px, 2.5vw, 18px)', cursor: 'pointer', textTransform: 'uppercase',
               }}
             >
               {t('effect.skip')}
@@ -379,8 +380,8 @@ export default function TargetSelector({ pendingAction, gameState, myPlayer, onS
         animate={{ scale: 1, opacity: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 350, damping: 24 }}
         style={{
-          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14,
-          padding: '28px 24px 20px', position: 'relative',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'clamp(8px, 2vw, 14px)',
+          padding: 'clamp(16px, 4vw, 28px) clamp(12px, 3vw, 24px) clamp(12px, 3vw, 20px)', position: 'relative',
           background: 'linear-gradient(180deg, #0d0d1a 0%, #0a0a14 100%)',
           border: `1px solid ${accentColor}15`, borderRadius: 16,
           maxWidth: 460, width: '92%', maxHeight: '80vh', overflow: 'auto',
@@ -391,7 +392,7 @@ export default function TargetSelector({ pendingAction, gameState, myPlayer, onS
         <CardHeader color={accentColor} badge={badge} />
 
         {/* Clickable option buttons */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%', marginTop: 4 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(6px, 1.5vw, 8px)', width: '100%', marginTop: 4 }}>
           {options.map((option, i) => {
             const label = optionLabels?.[i] || option;
             return (
@@ -405,7 +406,7 @@ export default function TargetSelector({ pendingAction, gameState, myPlayer, onS
                 onClick={() => toggleSelection(option)}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 12,
-                  padding: '10px 16px',
+                  padding: 'clamp(8px, 2vw, 10px) clamp(10px, 2.5vw, 16px)',
                   background: `linear-gradient(90deg, ${accentColor}06 0%, transparent 100%)`,
                   border: `1px solid ${accentColor}20`,
                   borderRadius: 8, cursor: 'pointer', width: '100%',
@@ -440,7 +441,7 @@ export default function TargetSelector({ pendingAction, gameState, myPlayer, onS
               fontFamily: 'var(--font-blender), sans-serif',
               fontSize: 11, color: '#4a4a5a', background: 'transparent',
               border: '1px solid #1e2030', borderRadius: 6,
-              padding: '6px 18px', cursor: 'pointer', textTransform: 'uppercase',
+              padding: 'clamp(4px, 1vw, 6px) clamp(10px, 2.5vw, 18px)', cursor: 'pointer', textTransform: 'uppercase',
             }}
           >
             {t('effect.skip')}

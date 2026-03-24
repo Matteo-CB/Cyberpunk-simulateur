@@ -32,18 +32,19 @@ export default function GameEndScreen({
       className="fixed inset-0 z-50 flex items-center justify-center"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      style={{ background: 'rgba(2,2,8,0.92)', padding: 20 }}
+      style={{ background: 'rgba(2,2,8,0.92)', padding: 'clamp(10px, 3vw, 20px)' }}
     >
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: 'spring', delay: 0.2 }}
         style={{
-          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24,
-          padding: '44px 40px', borderRadius: 16,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'clamp(12px, 3vw, 24px)',
+          padding: 'clamp(20px, 5vw, 44px) clamp(16px, 4vw, 40px)', borderRadius: 16,
           background: 'linear-gradient(180deg, #0d0d1a 0%, #0a0a14 100%)',
           border: `1px solid ${color}30`,
-          maxWidth: 480, width: '100%',
+          maxWidth: 480, width: '94%',
+          maxHeight: '92vh', overflowY: 'auto',
           boxShadow: `0 0 80px ${color}10, 0 20px 60px rgba(0,0,0,0.8)`,
         }}
       >
@@ -67,15 +68,15 @@ export default function GameEndScreen({
         </p>
 
         {/* Score */}
-        <div style={{ display: 'flex', gap: 32, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 'clamp(16px, 4vw, 32px)', alignItems: 'center' }}>
           <div style={{ textAlign: 'center' }}>
             <div className="font-blender" style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#5a6a7a', marginBottom: 4 }}>{t('game.you')}</div>
-            <div className="font-refinery" style={{ fontSize: 36, color: '#e0e8f0' }}>{playerScore}</div>
+            <div className="font-refinery" style={{ fontSize: 'clamp(24px, 6vw, 36px)', color: '#e0e8f0' }}>{playerScore}</div>
           </div>
-          <div className="font-blender" style={{ fontSize: 20, color: '#3a3a4a' }}>{t('game.vs')}</div>
+          <div className="font-blender" style={{ fontSize: 'clamp(14px, 3vw, 20px)', color: '#3a3a4a' }}>{t('game.vs')}</div>
           <div style={{ textAlign: 'center' }}>
             <div className="font-blender" style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#5a6a7a', marginBottom: 4 }}>{t('game.rival')}</div>
-            <div className="font-refinery" style={{ fontSize: 36, color: '#e0e8f0' }}>{opponentScore}</div>
+            <div className="font-refinery" style={{ fontSize: 'clamp(24px, 6vw, 36px)', color: '#e0e8f0' }}>{opponentScore}</div>
           </div>
         </div>
 
@@ -110,7 +111,7 @@ export default function GameEndScreen({
           className="font-blender cursor-pointer"
           style={{
             fontSize: 14, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em',
-            padding: '14px 40px', borderRadius: 10,
+            padding: 'clamp(8px, 2vw, 14px) clamp(16px, 4vw, 40px)', borderRadius: 10,
             background: 'rgba(0,240,255,0.06)', border: '1px solid rgba(0,240,255,0.3)',
             color: '#00f0ff',
           }}

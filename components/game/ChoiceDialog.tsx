@@ -45,8 +45,9 @@ export default function ChoiceDialog({ pendingAction, onChoice }: ChoiceDialogPr
         animate={{ scale: 1, opacity: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 350, damping: 24 }}
         style={{
-          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18,
-          padding: '28px 28px 24px', position: 'relative',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'clamp(10px, 2.5vw, 18px)',
+          padding: 'clamp(16px, 4vw, 28px) clamp(14px, 3vw, 28px) clamp(12px, 3vw, 24px)', position: 'relative',
+          maxHeight: '92vh', overflowY: 'auto',
           background: 'linear-gradient(180deg, #0d0d1a 0%, #0a0a14 100%)',
           border: '1px solid rgba(0,240,255,0.15)',
           borderRadius: 16, maxWidth: 440, width: '92%',
@@ -90,7 +91,7 @@ export default function ChoiceDialog({ pendingAction, onChoice }: ChoiceDialogPr
             initial={{ scale: 0.6, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.05, type: 'spring', stiffness: 300 }}
-            style={{ position: 'relative', width: 80, height: 112, borderRadius: 8, overflow: 'hidden' }}
+            style={{ position: 'relative', width: 'clamp(55px, 15vw, 80px)', height: 'clamp(77px, 21vw, 112px)', borderRadius: 8, overflow: 'hidden' }}
           >
             <div style={{
               position: 'absolute', inset: -12,
@@ -103,7 +104,7 @@ export default function ChoiceDialog({ pendingAction, onChoice }: ChoiceDialogPr
               border: '2px solid rgba(252,238,9,0.3)',
               boxShadow: '0 0 20px rgba(252,238,9,0.1)',
             }}>
-              <Image src={`/images/cards/${cardSet}/${cardId}.webp`} alt={cardName} fill style={{ objectFit: 'cover' }} sizes="80px" />
+              <Image src={`/images/cards/${cardSet}/${cardId}.webp`} alt={cardName} fill style={{ objectFit: 'cover' }} sizes="(max-width: 640px) 55px, 80px" />
             </div>
           </motion.div>
         )}
@@ -125,7 +126,7 @@ export default function ChoiceDialog({ pendingAction, onChoice }: ChoiceDialogPr
         </motion.p>
 
         {/* Option buttons */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%', marginTop: 4 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(6px, 1.5vw, 8px)', width: '100%', marginTop: 4 }}>
           {pendingAction.options.map((option, i) => {
             const label = pendingAction.optionLabels?.[i] || option;
             const color = OPTION_COLORS[i % OPTION_COLORS.length];
@@ -143,7 +144,7 @@ export default function ChoiceDialog({ pendingAction, onChoice }: ChoiceDialogPr
                   fontSize: 14, fontWeight: 700, color,
                   background: `linear-gradient(90deg, ${color}08 0%, transparent 100%)`,
                   border: `1px solid ${color}30`,
-                  borderRadius: 8, padding: '12px 20px',
+                  borderRadius: 8, padding: 'clamp(8px, 2vw, 12px) clamp(12px, 3vw, 20px)',
                   cursor: 'pointer', textTransform: 'uppercase',
                   letterSpacing: '0.08em', textAlign: 'left',
                   display: 'flex', alignItems: 'center', gap: 10,

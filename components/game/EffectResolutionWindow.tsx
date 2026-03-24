@@ -106,8 +106,9 @@ export default function EffectResolutionWindow({ animationQueue, pendingConfirm,
           exit={{ scale: 0.8, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 300, damping: 22 }}
           style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16,
-            padding: '28px 32px', position: 'relative',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'clamp(10px, 2.5vw, 16px)',
+            padding: 'clamp(16px, 4vw, 28px) clamp(14px, 3vw, 32px)', position: 'relative',
+            maxHeight: '92vh', overflowY: 'auto',
             background: 'linear-gradient(180deg, #0d0d1a 0%, #0a0a14 100%)',
             border: `1px solid ${color}25`,
             borderRadius: 16,
@@ -153,7 +154,7 @@ export default function EffectResolutionWindow({ animationQueue, pendingConfirm,
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.1, type: 'spring', stiffness: 300 }}
               style={{
-                position: 'relative', width: 130, height: 182,
+                position: 'relative', width: 'clamp(70px, 20vw, 130px)', height: 'clamp(98px, 28vw, 182px)',
                 borderRadius: 10, overflow: 'hidden', marginTop: 8,
               }}
             >
@@ -171,7 +172,7 @@ export default function EffectResolutionWindow({ animationQueue, pendingConfirm,
               }}>
                 <Image
                   src={`/images/cards/${getCardSet(cardId)}/${cardId}.webp`}
-                  alt={cardName} fill style={{ objectFit: 'cover' }} sizes="130px"
+                  alt={cardName} fill style={{ objectFit: 'cover' }} sizes="(max-width: 640px) 70px, 130px"
                 />
                 {/* Holographic shimmer */}
                 <motion.div
@@ -194,7 +195,7 @@ export default function EffectResolutionWindow({ animationQueue, pendingConfirm,
             transition={{ delay: 0.2 }}
             style={{
               fontFamily: 'var(--font-refinery), sans-serif',
-              fontSize: 20, fontWeight: 700,
+              fontSize: 'clamp(16px, 4vw, 20px)', fontWeight: 700,
               color: '#e0e8f0', textAlign: 'center',
               textShadow: `0 0 20px ${color}30`,
             }}
@@ -253,7 +254,7 @@ export default function EffectResolutionWindow({ animationQueue, pendingConfirm,
                 fontFamily: 'var(--font-refinery), sans-serif',
                 fontSize: 14, fontWeight: 700, color,
                 background: `${color}10`, border: `1px solid ${color}40`,
-                borderRadius: 8, padding: '10px 36px', cursor: 'pointer',
+                borderRadius: 8, padding: 'clamp(8px, 2vw, 10px) clamp(16px, 4vw, 36px)', cursor: 'pointer',
                 textTransform: 'uppercase', letterSpacing: '0.15em',
                 boxShadow: `0 0 12px ${color}15`,
               }}
@@ -269,7 +270,7 @@ export default function EffectResolutionWindow({ animationQueue, pendingConfirm,
                   fontFamily: 'var(--font-blender), sans-serif',
                   fontSize: 12, color: '#4a4a5a', background: 'transparent',
                   border: '1px solid #2a2a3a', borderRadius: 8,
-                  padding: '10px 20px', cursor: 'pointer', textTransform: 'uppercase',
+                  padding: 'clamp(8px, 2vw, 10px) clamp(12px, 3vw, 20px)', cursor: 'pointer', textTransform: 'uppercase',
                 }}
               >
                 {t('effect.skip')}

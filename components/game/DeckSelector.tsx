@@ -97,22 +97,23 @@ export default function DeckSelector({ onSelect }: DeckSelectorProps) {
       className="fixed inset-0 z-50 flex items-center justify-center"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      style={{ background: 'rgba(2,2,8,0.92)', padding: 20 }}
+      style={{ background: 'rgba(2,2,8,0.92)', padding: 'clamp(10px, 3vw, 20px)' }}
     >
       <motion.div
         initial={{ scale: 0.9, y: 20 }}
         animate={{ scale: 1, y: 0 }}
         style={{
-          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20,
-          padding: '36px 32px', borderRadius: 16,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'clamp(12px, 3vw, 20px)',
+          padding: 'clamp(16px, 4vw, 36px) clamp(14px, 3vw, 32px)', borderRadius: 16,
           background: 'linear-gradient(180deg, #0d0d1a 0%, #0a0a14 100%)',
           border: '1px solid rgba(0,240,255,0.2)',
-          maxWidth: 500, width: '100%',
+          maxWidth: 500, width: '94%',
+          maxHeight: '92vh', overflowY: 'auto',
           boxShadow: '0 0 60px rgba(0,240,255,0.08), 0 20px 60px rgba(0,0,0,0.7)',
         }}
       >
         <h2 className="font-refinery" style={{
-          fontSize: 24, letterSpacing: '0.15em', color: '#00f0ff',
+          fontSize: 'clamp(18px, 5vw, 24px)', letterSpacing: '0.15em', color: '#00f0ff',
           textShadow: '0 0 20px rgba(0,240,255,0.3)',
         }}>
           {t('game.selectDeck')}
@@ -121,7 +122,7 @@ export default function DeckSelector({ onSelect }: DeckSelectorProps) {
           {t('game.selectDeckDesc')}
         </p>
 
-        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 320, overflowY: 'auto' }}>
+        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 'clamp(200px, 50vh, 320px)', overflowY: 'auto' }}>
           {/* Random deck option */}
           <motion.button
             whileHover={{ scale: 1.02 }}
@@ -130,7 +131,7 @@ export default function DeckSelector({ onSelect }: DeckSelectorProps) {
             onClick={() => handleSelect(null)}
             style={{
               ...(selectedId === null && selectedId !== undefined ? selectedStyle : unselectedStyle),
-              padding: '14px 18px', borderRadius: 10, textAlign: 'left',
+              padding: 'clamp(8px, 2vw, 14px) clamp(10px, 3vw, 18px)', borderRadius: 10, textAlign: 'left',
               width: '100%', display: 'flex', flexDirection: 'column', gap: 4,
             }}
           >
@@ -155,7 +156,7 @@ export default function DeckSelector({ onSelect }: DeckSelectorProps) {
               onClick={() => handleSelect(deck.id)}
               style={{
                 ...(selectedId === deck.id ? selectedStyle : unselectedStyle),
-                padding: '14px 18px', borderRadius: 10, textAlign: 'left',
+                padding: 'clamp(8px, 2vw, 14px) clamp(10px, 3vw, 18px)', borderRadius: 10, textAlign: 'left',
                 width: '100%', display: 'flex', flexDirection: 'column', gap: 4,
               }}
             >
