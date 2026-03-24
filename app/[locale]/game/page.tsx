@@ -125,16 +125,22 @@ export default function GamePage() {
           }
 
           if (isHost) {
-            setStatus('waiting');
+            // Check if guest already joined (room has guestId)
+            if (res.room?.guestId) {
+              // Guest is already here — create game immediately
+              const state = GameEngine.createGame(
+                p1Cards, p1Legends,
+                pickDeck(), pickLegends(),
+                { player1UserId: userId }
+              );
+              setGameState(state);
+              setStatus('playing');
+              s.emit('game:state-update', { roomCode: config.roomCode, gameState: state });
+            } else {
+              setStatus('waiting');
+            }
           } else {
-            // Guest: create game state and send to host
-            const state = GameEngine.createGame(
-              pickDeck(), pickLegends(), // opponent deck (random)
-              p1Cards, p1Legends, // my deck as player2
-              { player1UserId: 'opponent', player2UserId: userId }
-            );
-            // Actually for consistency, let the host create the state
-            // Guest just signals ready
+            // Guest: wait for host to send game state
             setStatus('waiting');
           }
         });
