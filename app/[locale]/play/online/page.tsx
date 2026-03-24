@@ -83,6 +83,10 @@ export default function PlayOnlinePage() {
     s.on('room:list-update', (rooms: PublicRoom[]) => setPublicRooms(rooms));
     s.on('games:list-update', (games: ActiveGame[]) => setActiveGames(games));
     s.on('room:updated', () => s.emit('room:list'));
+    s.on('room:player-joined', () => {
+      // Opponent joined — redirect to game
+      router.push('/game');
+    });
     setSocket(s);
 
     const interval = setInterval(() => s.emit('room:list'), 5000);
@@ -97,13 +101,13 @@ export default function PlayOnlinePage() {
       isPrivate: false, isRanked: mode === 'ranked', gameMode: mode,
     }, (res: { ok: boolean; error?: string }) => {
       if (res.ok) {
+        setCreatedCode(code);
         sessionStorage.setItem('gameConfig', JSON.stringify({ mode: 'online', roomCode: code, isHost: true, gameMode: mode }));
-        router.push('/game');
       } else {
         setError(res.error || 'Failed to create room');
       }
     });
-  }, [socket, user, router]);
+  }, [socket, user]);
 
   const handleCreatePrivate = useCallback(() => {
     if (!socket || !user) return;

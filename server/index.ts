@@ -429,15 +429,27 @@ async function startServer() {
         });
       }
 
-      // If the host leaves, close the room
+      // If the host disconnects, give 15s grace period for reconnect (page navigation)
       if (room.hostId === user.userId) {
-        io.to(roomCode).emit('room:closed', {
-          reason: 'Host left the room',
-        });
-        rooms.delete(roomCode);
-        console.log(
-          `[socket] Room ${roomCode} closed (host ${user.username} left)`
-        );
+        console.log(`[socket] Host ${user.username} disconnected from room ${roomCode}, grace period 15s`);
+        setTimeout(() => {
+          const stillRoom = rooms.get(roomCode);
+          if (!stillRoom) return; // Already deleted
+          // Check if host reconnected (a new socket joined with same userId)
+          let hostReconnected = false;
+          for (const [, u] of socketToUser.entries()) {
+            if (u.userId === user.userId) {
+              const sr = socketToRoom.get(Array.from(socketToUser.entries()).find(([, v]) => v.userId === u.userId)?.[0] || '');
+              if (sr === roomCode) { hostReconnected = true; break; }
+            }
+          }
+          if (!hostReconnected) {
+            io.to(roomCode).emit('room:closed', { reason: 'Host left the room' });
+            rooms.delete(roomCode);
+            broadcastRoomList();
+            console.log(`[socket] Room ${roomCode} closed after grace period`);
+          }
+        }, 15000);
         return;
       }
     }
