@@ -57,6 +57,7 @@ export default function PlayOnlinePage() {
   const router = useRouter();
   const [view, setView] = useState<'public' | 'private'>('public');
   const [socket, setSocket] = useState<Socket | null>(null);
+  const [connected, setConnected] = useState(false);
   const [user, setUser] = useState<{ id: string; username: string } | null>(null);
   const [publicRooms, setPublicRooms] = useState<PublicRoom[]>([]);
   const [activeGames, setActiveGames] = useState<ActiveGame[]>([]);
@@ -77,9 +78,11 @@ export default function PlayOnlinePage() {
     if (!user) return;
     const s = io(SOCKET_URL, { transports: ['websocket', 'polling'] });
     s.on('connect', () => {
+      setConnected(true);
       s.emit('auth', { userId: user.id, username: user.username });
       s.emit('room:list');
     });
+    s.on('disconnect', () => setConnected(false));
     s.on('room:list-update', (rooms: PublicRoom[]) => setPublicRooms(rooms));
     s.on('games:list-update', (games: ActiveGame[]) => setActiveGames(games));
     s.on('room:updated', () => s.emit('room:list'));
@@ -94,7 +97,8 @@ export default function PlayOnlinePage() {
   }, [user]);
 
   const handleCreatePublic = useCallback((mode: 'casual' | 'ranked') => {
-    if (!socket || !user) return;
+    if (!user) { setError('You must be logged in'); return; }
+    if (!socket || !socket.connected) { setError('Connecting to server...'); return; }
     const code = generateRoomCode();
     socket.emit('room:create', {
       roomCode: code, userId: user.id, username: user.username,
@@ -126,7 +130,10 @@ export default function PlayOnlinePage() {
   }, [socket, user, privateMode]);
 
   const handleJoin = useCallback((code: string) => {
-    if (!socket || !user) return;
+    if (!user) {
+      setError('You must be logged in to join a room');
+      return;
+    }
     sessionStorage.setItem('gameConfig', JSON.stringify({ mode: 'online', roomCode: code, isHost: false }));
     router.push('/game');
   }, [user, router]);
@@ -150,6 +157,16 @@ export default function PlayOnlinePage() {
             {t('subtitle')}
           </p>
         </div>
+
+        {/* Connection status */}
+        {user && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 12 }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: connected ? '#22c55e' : '#ff003c', boxShadow: connected ? '0 0 6px #22c55e' : '0 0 6px #ff003c' }} />
+            <span className="font-blender" style={{ fontSize: 10, color: connected ? '#22c55e' : '#ff003c', textTransform: 'uppercase' }}>
+              {connected ? 'Connected' : 'Connecting...'}
+            </span>
+          </div>
+        )}
 
         {/* Error */}
         {error && (
