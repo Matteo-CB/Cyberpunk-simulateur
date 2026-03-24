@@ -121,7 +121,8 @@ export default function GamePage() {
           if (res.room?.gameMode === 'ranked' || res.room?.isRanked) {
             setIsRanked(true);
           }
-          setStatus('waiting');
+          // Guest: host is already in room, go straight to deck select
+          setStatus('deck-select');
         });
       }
     });
