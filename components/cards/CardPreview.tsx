@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations, useLocale } from 'next-intl';
@@ -27,6 +28,15 @@ interface CardPreviewProps {
 export default function CardPreview({ card, onClose }: CardPreviewProps) {
   const t = useTranslations();
   const locale = useLocale();
+  const [mobile, setMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setMobile(window.innerWidth < 640);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
   if (!card) return null;
 
   const color = COLOR_MAP[card.color] || '#00f0ff';
@@ -45,6 +55,7 @@ export default function CardPreview({ card, onClose }: CardPreviewProps) {
           alignItems: 'center',
           justifyContent: 'center',
           background: 'rgba(0,0,0,0.88)',
+          padding: mobile ? 12 : 0,
         }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -54,11 +65,14 @@ export default function CardPreview({ card, onClose }: CardPreviewProps) {
         <motion.div
           style={{
             display: 'flex',
-            gap: 32,
-            padding: 28,
-            maxWidth: 780,
+            flexDirection: mobile ? 'column' : 'row',
+            gap: mobile ? 16 : 32,
+            padding: mobile ? 16 : 28,
+            maxWidth: mobile ? 360 : 780,
             width: '100%',
-            margin: '0 16px',
+            maxHeight: '92vh',
+            overflowY: 'auto',
+            alignItems: mobile ? 'center' : undefined,
           }}
           initial={{ scale: 0.92, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -70,9 +84,9 @@ export default function CardPreview({ card, onClose }: CardPreviewProps) {
           <div style={{
             position: 'relative',
             flexShrink: 0,
-            width: 280,
-            height: 391,
-            borderRadius: 12,
+            width: mobile ? 160 : 280,
+            height: mobile ? 224 : 391,
+            borderRadius: mobile ? 8 : 12,
             overflow: 'hidden',
             border: `2px solid ${color}`,
             boxShadow: `0 0 40px ${color}30, 0 8px 32px rgba(0,0,0,0.5)`,
@@ -82,7 +96,7 @@ export default function CardPreview({ card, onClose }: CardPreviewProps) {
               alt={name}
               fill
               style={{ objectFit: 'cover' }}
-              sizes="280px"
+              sizes={mobile ? '160px' : '280px'}
               priority
             />
           </div>
@@ -93,11 +107,12 @@ export default function CardPreview({ card, onClose }: CardPreviewProps) {
             flexDirection: 'column',
             flex: 1,
             minWidth: 0,
+            alignItems: mobile ? 'center' : undefined,
+            textAlign: mobile ? 'center' : undefined,
           }}>
-            {/* Name */}
             <h2 style={{
               fontFamily: 'var(--font-refinery), sans-serif',
-              fontSize: 26,
+              fontSize: mobile ? 20 : 26,
               letterSpacing: '0.04em',
               color,
               margin: 0,
@@ -106,11 +121,10 @@ export default function CardPreview({ card, onClose }: CardPreviewProps) {
               {name}
             </h2>
 
-            {/* Title */}
             {title && (
               <p style={{
                 fontFamily: 'var(--font-blender), sans-serif',
-                fontSize: 14,
+                fontSize: mobile ? 12 : 14,
                 fontStyle: 'italic',
                 color: '#7a8a9a',
                 margin: 0,
@@ -120,26 +134,19 @@ export default function CardPreview({ card, onClose }: CardPreviewProps) {
               </p>
             )}
 
-            {/* Gap */}
-            <div style={{ height: 16 }} />
-
-            {/* Gradient divider */}
-            <div style={{
-              height: 1,
-              background: `linear-gradient(to right, ${color}, ${color}40, transparent)`,
-            }} />
-
-            {/* Gap */}
-            <div style={{ height: 16 }} />
+            <div style={{ height: mobile ? 10 : 16 }} />
+            <div style={{ height: 1, background: `linear-gradient(to right, ${color}, ${color}40, transparent)` }} />
+            <div style={{ height: mobile ? 10 : 16 }} />
 
             {/* Stats line */}
             <div style={{
               fontFamily: 'var(--font-blender), sans-serif',
-              fontSize: 14,
+              fontSize: mobile ? 12 : 14,
               display: 'flex',
               flexWrap: 'wrap',
-              gap: '4px 20px',
+              gap: mobile ? '4px 12px' : '4px 20px',
               lineHeight: 1.6,
+              justifyContent: mobile ? 'center' : undefined,
             }}>
               <span style={{ color: '#7a8a9a' }}>
                 {t('game.type')}: <span style={{ color: '#e0e8f0', fontWeight: 600 }}>{t(TYPE_KEYS[card.card_type] || 'game.typeUnit')}</span>
@@ -162,118 +169,64 @@ export default function CardPreview({ card, onClose }: CardPreviewProps) {
               </span>
             </div>
 
-            {/* Gap */}
-            <div style={{ height: 14 }} />
+            <div style={{ height: mobile ? 8 : 14 }} />
 
             {/* Classifications */}
             {card.classifications.length > 0 && (
               <>
-                <div style={{
-                  fontFamily: 'var(--font-blender), sans-serif',
-                  fontSize: 11,
-                  color: '#5a6a7a',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.08em',
-                  marginBottom: 6,
-                }}>
+                <div style={{ fontFamily: 'var(--font-blender), sans-serif', fontSize: 11, color: '#5a6a7a', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
                   {t('game.classifications')}
                 </div>
-                <div style={{
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  gap: 6,
-                }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: mobile ? 'center' : undefined }}>
                   {card.classifications.map((cls) => (
-                    <span
-                      key={cls}
-                      style={{
-                        fontFamily: 'var(--font-blender), sans-serif',
-                        fontSize: 12,
-                        padding: '5px 12px',
-                        borderRadius: 4,
-                        background: `${color}18`,
-                        border: `1px solid ${color}35`,
-                        color,
-                        letterSpacing: '0.02em',
-                      }}
-                    >
+                    <span key={cls} style={{
+                      fontFamily: 'var(--font-blender), sans-serif', fontSize: mobile ? 11 : 12,
+                      padding: mobile ? '4px 10px' : '5px 12px', borderRadius: 4,
+                      background: `${color}18`, border: `1px solid ${color}35`, color,
+                    }}>
                       {cls}
                     </span>
                   ))}
                 </div>
-                <div style={{ height: 14 }} />
+                <div style={{ height: mobile ? 8 : 14 }} />
               </>
             )}
 
             {/* Keywords */}
             {card.keywords.length > 0 && (
               <>
-                <div style={{
-                  fontFamily: 'var(--font-blender), sans-serif',
-                  fontSize: 11,
-                  color: '#5a6a7a',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.08em',
-                  marginBottom: 6,
-                }}>
+                <div style={{ fontFamily: 'var(--font-blender), sans-serif', fontSize: 11, color: '#5a6a7a', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
                   {t('game.keywords')}
                 </div>
-                <div style={{
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  gap: 6,
-                }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: mobile ? 'center' : undefined }}>
                   {card.keywords.map((kw) => (
-                    <span
-                      key={kw}
-                      style={{
-                        fontFamily: 'var(--font-blender), sans-serif',
-                        fontSize: 12,
-                        fontWeight: 600,
-                        padding: '5px 12px',
-                        borderRadius: 4,
-                        background: '#ff003c18',
-                        border: '1px solid #ff003c35',
-                        color: '#ff003c',
-                        letterSpacing: '0.02em',
-                      }}
-                    >
+                    <span key={kw} style={{
+                      fontFamily: 'var(--font-blender), sans-serif', fontSize: mobile ? 11 : 12, fontWeight: 600,
+                      padding: mobile ? '4px 10px' : '5px 12px', borderRadius: 4,
+                      background: '#ff003c18', border: '1px solid #ff003c35', color: '#ff003c',
+                    }}>
                       {kw}
                     </span>
                   ))}
                 </div>
-                <div style={{ height: 14 }} />
+                <div style={{ height: mobile ? 8 : 14 }} />
               </>
             )}
 
             {/* Effects */}
             {card.effects.length > 0 && (
-              <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 10,
-              }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: mobile ? 6 : 10 }}>
                 {card.effects.map((effect, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      fontFamily: 'var(--font-blender), sans-serif',
-                      fontSize: 13,
-                      padding: 14,
-                      borderRadius: 6,
-                      background: 'transparent',
-                      border: '1px solid #1e2030',
-                      lineHeight: 1.7,
-                    }}
-                  >
-                    <span style={{
-                      fontWeight: 700,
-                      color: '#ff003c',
-                      marginRight: 8,
-                      textTransform: 'uppercase',
-                      fontSize: 12,
-                      letterSpacing: '0.04em',
-                    }}>
+                  <div key={i} style={{
+                    fontFamily: 'var(--font-blender), sans-serif',
+                    fontSize: mobile ? 12 : 13,
+                    padding: mobile ? 10 : 14,
+                    borderRadius: 6,
+                    border: '1px solid #1e2030',
+                    lineHeight: 1.7,
+                    textAlign: 'left',
+                  }}>
+                    <span style={{ fontWeight: 700, color: '#ff003c', marginRight: 8, textTransform: 'uppercase', fontSize: mobile ? 11 : 12, letterSpacing: '0.04em' }}>
                       {effect.type}
                     </span>
                     <span style={{ color: '#c8d0da' }}>
@@ -284,18 +237,10 @@ export default function CardPreview({ card, onClose }: CardPreviewProps) {
               </div>
             )}
 
-            {/* Spacer pushes sell tag to bottom */}
-            <div style={{ flex: 1, minHeight: 14 }} />
+            <div style={{ flex: 1, minHeight: mobile ? 8 : 14 }} />
 
-            {/* Sell tag */}
             {card.sell_tag && (
-              <div style={{
-                fontFamily: 'var(--font-blender), sans-serif',
-                fontSize: 11,
-                color: '#fcee09',
-                opacity: 0.8,
-                letterSpacing: '0.03em',
-              }}>
+              <div style={{ fontFamily: 'var(--font-blender), sans-serif', fontSize: 11, color: '#fcee09', opacity: 0.8 }}>
                 {t('game.sellable')}
               </div>
             )}

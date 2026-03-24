@@ -15,23 +15,29 @@ interface CardInHandProps {
   totalCards: number;
   isSelected?: boolean;
   isPlayable?: boolean;
+  compact?: boolean;
   onClick?: () => void;
   onHover?: () => void;
   onHoverEnd?: () => void;
 }
 
 export default function CardInHand({
-  card, index, totalCards, isSelected, isPlayable, onClick, onHover, onHoverEnd,
+  card, index, totalCards, isSelected, isPlayable, compact, onClick, onHover, onHoverEnd,
 }: CardInHandProps) {
   const locale = useLocale();
   const cardName = locale === 'fr' ? card.name_fr : card.name_en;
   const midpoint = (totalCards - 1) / 2;
   const offset = index - midpoint;
-  const rotation = offset * 2.5;
-  const translateY = Math.abs(offset) * 5;
-  const spacing = Math.min(45, 280 / Math.max(totalCards, 1));
+  const rotation = offset * (compact ? 2 : 2.5);
+  const translateY = Math.abs(offset) * (compact ? 3 : 5);
+  const maxSpread = compact ? 200 : 280;
+  const spacing = Math.min(compact ? 32 : 45, maxSpread / Math.max(totalCards, 1));
   const translateX = offset * spacing;
   const color = COLOR_MAP[card.color] || '#00f0ff';
+
+  const w = compact ? 50 : 76;
+  const h = compact ? 70 : 106;
+  const halfW = w / 2;
 
   return (
     <motion.div
@@ -43,11 +49,11 @@ export default function CardInHand({
         cursor: 'pointer',
       }}
       animate={{
-        x: translateX - 38,
-        y: isSelected ? -40 - translateY : -translateY,
+        x: translateX - halfW,
+        y: isSelected ? -(compact ? 25 : 40) - translateY : -translateY,
         rotate: isSelected ? 0 : rotation,
       }}
-      whileHover={{ y: -35 - translateY, scale: 1.06, zIndex: 50 }}
+      whileHover={compact ? undefined : { y: -35 - translateY, scale: 1.06, zIndex: 50 }}
       transition={{ type: 'spring', stiffness: 300, damping: 25 }}
       onClick={onClick}
       onHoverStart={onHover}
@@ -55,9 +61,9 @@ export default function CardInHand({
     >
       <div style={{
         position: 'relative',
-        width: 76,
-        height: 106,
-        borderRadius: 5,
+        width: w,
+        height: h,
+        borderRadius: compact ? 4 : 5,
         overflow: 'hidden',
         border: isSelected ? `2px solid ${color}` : '1px solid rgba(252,238,9,0.12)',
         boxShadow: isSelected
@@ -72,17 +78,17 @@ export default function CardInHand({
           alt={cardName}
           fill
           style={{ objectFit: 'cover' }}
-          sizes="76px"
+          sizes={`${w}px`}
         />
         {/* Cost badge */}
         {card.cost !== null && (
           <div style={{
             position: 'absolute', top: 2, left: 2,
-            width: 16, height: 16, borderRadius: 3,
+            width: compact ? 13 : 16, height: compact ? 13 : 16, borderRadius: 3,
             background: 'rgba(0,0,0,0.8)', border: `1px solid ${color}60`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontFamily: 'var(--font-blender), sans-serif',
-            fontSize: 9, fontWeight: 700, color: '#fcee09',
+            fontSize: compact ? 7 : 9, fontWeight: 700, color: '#fcee09',
           }}>
             {card.cost}
           </div>
@@ -91,11 +97,11 @@ export default function CardInHand({
         {card.power !== null && card.card_type !== 'program' && (
           <div style={{
             position: 'absolute', bottom: 2, right: 2,
-            width: 16, height: 16, borderRadius: 3,
+            width: compact ? 13 : 16, height: compact ? 13 : 16, borderRadius: 3,
             background: 'rgba(0,0,0,0.8)', border: `1px solid ${color}60`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontFamily: 'var(--font-blender), sans-serif',
-            fontSize: 9, fontWeight: 700, color: '#ff003c',
+            fontSize: compact ? 7 : 9, fontWeight: 700, color: '#ff003c',
           }}>
             {card.power}
           </div>

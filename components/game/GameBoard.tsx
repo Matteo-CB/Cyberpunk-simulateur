@@ -501,6 +501,8 @@ export default function GameBoard({ initialState, myPlayer, onAction, isOnline, 
         <Zone label={t('game.yourHand')} style={{ padding: compact ? '2px 4px' : '4px 8px', height: compact ? 85 : 130, marginTop: compact ? 1 : 3, overflow: 'hidden' }}>
           <PlayerHand
             cards={me.hand} selectedIndex={selectedCardIndex} playableIndices={playableIndices}
+            compact={compact}
+            onLongPress={compact ? (card) => setPreviewCard(card) : undefined}
             onSelectCard={(i) => {
               const c = me.hand[i];
               if (gameState.phase === 'play' && isMyTurn) {
@@ -636,32 +638,41 @@ export default function GameBoard({ initialState, myPlayer, onAction, isOnline, 
       )}
       <CardPreview card={previewCard} onClose={() => setPreviewCard(null)} />
 
-      {/* Hover preview with card image */}
+      {/* Hover preview with card image (desktop only, enlarged) */}
       <AnimatePresence>
-        {hoveredCard && !previewCard && (
-          <motion.div className="fixed z-40 pointer-events-none" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ top: 50, right: showLog ? 250 : 12 }}>
-            <div style={{ display: 'flex', gap: 10, padding: 10, borderRadius: 8, background: 'rgba(8,8,16,0.96)', border: `1px solid ${GOLD_DIM}`, boxShadow: '0 6px 24px rgba(0,0,0,0.7)' }}>
-              {/* Mini card image */}
-              <div style={{ position: 'relative', width: 80, height: 112, borderRadius: 4, overflow: 'hidden', flexShrink: 0, border: `1px solid ${COLOR_MAP[hoveredCard.color] || GOLD}40` }}>
-                <Image src={`/images/cards/${hoveredCard.set}/${hoveredCard.id}.webp`} alt={locale === 'fr' ? hoveredCard.name_fr : hoveredCard.name_en} fill style={{ objectFit: 'cover' }} sizes="80px" />
+        {hoveredCard && !previewCard && !compact && (
+          <motion.div className="fixed z-40 pointer-events-none" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ top: 40, right: showLog ? 250 : 12 }}>
+            <div style={{ display: 'flex', gap: 14, padding: 14, borderRadius: 10, background: 'rgba(8,8,16,0.97)', border: `1px solid ${GOLD_DIM}`, boxShadow: '0 8px 32px rgba(0,0,0,0.8)', maxWidth: 380 }}>
+              {/* Card image */}
+              <div style={{ position: 'relative', width: 140, height: 196, borderRadius: 6, overflow: 'hidden', flexShrink: 0, border: `1px solid ${COLOR_MAP[hoveredCard.color] || GOLD}50` }}>
+                <Image src={`/images/cards/${hoveredCard.set}/${hoveredCard.id}.webp`} alt={locale === 'fr' ? hoveredCard.name_fr : hoveredCard.name_en} fill style={{ objectFit: 'cover' }} sizes="140px" />
               </div>
               {/* Info */}
-              <div className="font-blender" style={{ maxWidth: 170, display: 'flex', flexDirection: 'column', gap: 3 }}>
-                <div style={{ fontWeight: 700, color: COLOR_MAP[hoveredCard.color] || '#e0e8f0', fontSize: 13 }}>{locale === 'fr' ? hoveredCard.name_fr : hoveredCard.name_en}</div>
-                {(locale === 'fr' ? hoveredCard.title_fr : hoveredCard.title_en) && <div style={{ color: '#7a8a9a', fontSize: 10, fontStyle: 'italic' }}>{locale === 'fr' ? hoveredCard.title_fr : hoveredCard.title_en}</div>}
-                <div style={{ display: 'flex', gap: 8, fontSize: 10, color: '#666', marginTop: 2 }}>
+              <div className="font-blender" style={{ maxWidth: 200, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <div style={{ fontWeight: 700, color: COLOR_MAP[hoveredCard.color] || '#e0e8f0', fontSize: 15 }}>{locale === 'fr' ? hoveredCard.name_fr : hoveredCard.name_en}</div>
+                {(locale === 'fr' ? hoveredCard.title_fr : hoveredCard.title_en) && <div style={{ color: '#7a8a9a', fontSize: 11, fontStyle: 'italic' }}>{locale === 'fr' ? hoveredCard.title_fr : hoveredCard.title_en}</div>}
+                <div style={{ display: 'flex', gap: 10, fontSize: 11, color: '#666', marginTop: 3 }}>
                   <span>{hoveredCard.card_type.toUpperCase()}</span>
                   {hoveredCard.cost !== null && <span>{t('game.cost')}: <span style={{ color: GOLD }}>{hoveredCard.cost}</span></span>}
                   {hoveredCard.power !== null && <span>{t('game.power')}: <span style={{ color: '#ff003c' }}>{hoveredCard.power}</span></span>}
+                  <span>{t('game.ram')}: <span style={{ color: COLOR_MAP[hoveredCard.color] || GOLD }}>{hoveredCard.ram}</span></span>
                 </div>
-                {hoveredCard.effects.length > 0 && (() => {
-                  const effectDesc = locale === 'fr' ? hoveredCard.effects[0].description_fr : hoveredCard.effects[0].description_en;
-                  return (
-                  <div style={{ color: '#8a9aaa', fontSize: 10, marginTop: 3, lineHeight: 1.4 }}>
-                    {effectDesc.slice(0, 120)}{effectDesc.length > 120 ? '...' : ''}
+                {hoveredCard.keywords.length > 0 && (
+                  <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 2 }}>
+                    {hoveredCard.keywords.map((kw) => (
+                      <span key={kw} style={{ fontSize: 9, fontWeight: 700, color: '#ff003c', padding: '1px 6px', borderRadius: 3, background: '#ff003c15', border: '1px solid #ff003c30' }}>{kw}</span>
+                    ))}
                   </div>
+                )}
+                {hoveredCard.effects.map((effect, i) => {
+                  const desc = locale === 'fr' ? effect.description_fr : effect.description_en;
+                  return (
+                    <div key={i} style={{ color: '#8a9aaa', fontSize: 11, marginTop: 3, lineHeight: 1.5 }}>
+                      <span style={{ color: '#ff003c', fontWeight: 700, fontSize: 10, marginRight: 4 }}>{effect.type}</span>
+                      {desc.slice(0, 200)}{desc.length > 200 ? '...' : ''}
+                    </div>
                   );
-                })()}
+                })}
               </div>
             </div>
           </motion.div>
