@@ -6,6 +6,12 @@ import next from 'next';
 import { GameEngine } from '@/lib/engine/GameEngine';
 import type { GameState, GameAction, PlayerID } from '@/lib/engine/types';
 import { getOpponent } from '@/lib/engine/types';
+import { PrismaClient } from '@prisma/client';
+import { calculateElo, getLeagueTier } from '@/lib/elo/elo';
+import { syncDiscordRole } from '@/lib/discord/roleSync';
+import { sendRankUpWebhook, sendRankDownWebhook, sendPlacementCompletedWebhook } from '@/lib/discord/rankUpWebhook';
+
+const prisma = new PrismaClient();
 
 // ------------------------------------------------------------------
 // Configuration
@@ -219,8 +225,6 @@ async function handleGameOver(room: RoomData, state: GameState, io: SocketIOServ
   room.gameSaved = true;
   clearTurnTimer(room.code);
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${port}`;
-
   const winnerId = state.winner === 'player1' ? room.hostId
                  : state.winner === 'player2' ? room.guestId
                  : null;
@@ -230,38 +234,129 @@ async function handleGameOver(room: RoomData, state: GameState, io: SocketIOServ
   console.log(`[game-over] Room ${room.code}: winner=${state.winner}, reason=${state.winReason}, ranked=${room.isRanked}`);
 
   try {
-    // Single internal API call — creates + completes game in one step
-    const res = await fetch(`${appUrl}/api/game/internal`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-internal-key': INTERNAL_API_KEY },
-      body: JSON.stringify({
+    // Create game record
+    const game = await prisma.game.create({
+      data: {
         player1Id: room.hostId,
         player2Id: room.guestId,
+        isAiGame: false,
         isRanked: room.isRanked,
-        winnerId,
-        player1Score: p1Score,
-        player2Score: p2Score,
-        winReason: state.winReason,
-        turn: state.turn,
-      }),
+        gameState: { turn: state.turn, winReason: state.winReason },
+        status: 'in_progress',
+      },
+      include: { player1: true, player2: true },
     });
 
-    const result = await res.json();
-    console.log(`[game-over] API response (${res.status}):`, JSON.stringify(result).slice(0, 300));
+    let eloChange: number | null = null;
 
-    // Broadcast game:ended with ELO info to clients
+    if (winnerId && game.player1 && game.player2) {
+      const p1Result = winnerId === room.hostId ? 'win' as const : winnerId === room.guestId ? 'loss' as const : 'draw' as const;
+      const p2Result = winnerId === room.guestId ? 'win' as const : winnerId === room.hostId ? 'loss' as const : 'draw' as const;
+      const oldP1Elo = game.player1.elo;
+      const oldP2Elo = game.player2.elo;
+
+      if (room.isRanked) {
+        const p1Elo = calculateElo(game.player1.elo, game.player2.elo, p1Result);
+        const p2Elo = calculateElo(game.player2.elo, game.player1.elo, p2Result);
+        eloChange = Math.abs(p1Elo.change);
+
+        console.log(`[game-over] ELO: ${game.player1.username} ${oldP1Elo}->${p1Elo.newElo}, ${game.player2.username} ${oldP2Elo}->${p2Elo.newElo}`);
+
+        // Update player 1
+        await prisma.user.update({
+          where: { id: room.hostId },
+          data: {
+            elo: p1Elo.newElo,
+            ...(p1Result === 'win' ? { wins: { increment: 1 } } : p1Result === 'loss' ? { losses: { increment: 1 } } : { draws: { increment: 1 } }),
+          },
+        });
+        // Update player 2
+        await prisma.user.update({
+          where: { id: room.guestId! },
+          data: {
+            elo: p2Elo.newElo,
+            ...(p2Result === 'win' ? { wins: { increment: 1 } } : p2Result === 'loss' ? { losses: { increment: 1 } } : { draws: { increment: 1 } }),
+          },
+        });
+
+        // Placement + Discord sync for each player
+        const playerIds = [room.hostId, room.guestId!];
+        const oldElos = [oldP1Elo, oldP2Elo];
+        const newElos = [p1Elo.newElo, p2Elo.newElo];
+
+        for (let idx = 0; idx < playerIds.length; idx++) {
+          const pid = playerIds[idx];
+          const updated = await prisma.user.update({
+            where: { id: pid },
+            data: { gamesPlayed: { increment: 1 } },
+            select: { gamesPlayed: true, placementCompleted: true, discordId: true, elo: true, username: true },
+          });
+
+          if (updated.gamesPlayed >= 5 && !updated.placementCompleted) {
+            await prisma.user.update({ where: { id: pid }, data: { placementCompleted: true } });
+            const placedTier = getLeagueTier(newElos[idx]);
+            console.log(`[game-over] ${updated.username} completed placement -> ${placedTier.name}`);
+            try {
+              if (updated.discordId) await syncDiscordRole(updated.discordId, updated.elo, true);
+              await sendPlacementCompletedWebhook(updated.discordId || null, updated.username, placedTier, updated.elo);
+            } catch (e) { console.error('[game-over] Placement webhook error:', e); }
+            continue;
+          }
+
+          if (updated.placementCompleted) {
+            try {
+              const oldTier = getLeagueTier(oldElos[idx]);
+              const newTier = getLeagueTier(newElos[idx]);
+              if (updated.discordId) await syncDiscordRole(updated.discordId, updated.elo, true);
+              if (oldTier.key !== newTier.key) {
+                if (newElos[idx] > oldElos[idx]) {
+                  await sendRankUpWebhook(updated.discordId || null, updated.username, newTier, updated.elo, oldTier.key);
+                } else {
+                  await sendRankDownWebhook(updated.discordId || null, updated.username, newTier, updated.elo, oldTier.key);
+                }
+              }
+            } catch (e) { console.error('[game-over] Discord sync error:', e); }
+          }
+        }
+      } else {
+        // Casual: just wins/losses
+        await prisma.user.update({
+          where: { id: room.hostId },
+          data: p1Result === 'win' ? { wins: { increment: 1 } } : p1Result === 'loss' ? { losses: { increment: 1 } } : { draws: { increment: 1 } },
+        });
+        await prisma.user.update({
+          where: { id: room.guestId! },
+          data: p2Result === 'win' ? { wins: { increment: 1 } } : p2Result === 'loss' ? { losses: { increment: 1 } } : { draws: { increment: 1 } },
+        });
+      }
+    }
+
+    // Complete the game record
+    await prisma.game.update({
+      where: { id: game.id },
+      data: {
+        status: 'completed',
+        winnerId: winnerId || null,
+        player1Score: p1Score,
+        player2Score: p2Score,
+        eloChange,
+        completedAt: new Date(),
+      },
+    });
+
+    // Broadcast to clients
     io.to(room.code).emit('game:ended', {
       winnerId,
       winReason: state.winReason,
       player1Score: p1Score,
       player2Score: p2Score,
-      eloChange: result.eloChange ?? null,
+      eloChange,
       isRanked: room.isRanked,
     });
 
-    console.log(`[game-over] Game saved: ranked=${room.isRanked}, eloChange=${result.eloChange ?? 'N/A'}`);
+    console.log(`[game-over] Game saved: id=${game.id}, ranked=${room.isRanked}, eloChange=${eloChange ?? 'N/A'}`);
   } catch (err) {
-    console.error('[socket] Error saving game:', err);
+    console.error('[game-over] Error saving game:', err);
   }
 }
 
