@@ -243,7 +243,7 @@ export default function GamePage() {
   if (status === 'error') return (
     <div className="flex flex-col items-center justify-center min-h-screen" style={{ background: '#0a0a12', gap: 16 }}>
       <div className="font-refinery" style={{ color: '#ff003c', fontSize: 24 }}>Room not found</div>
-      <button className="font-blender" onClick={() => window.location.href = '/play/online'}
+      <button className="font-blender" onClick={() => window.location.href = '/'}
         style={{ color: '#00f0ff', background: 'transparent', border: '1px solid #00f0ff30', borderRadius: 8, padding: '10px 24px', cursor: 'pointer' }}>Back</button>
     </div>
   );
@@ -251,7 +251,7 @@ export default function GamePage() {
   if (status === 'closed' || status === 'opponent-left') return (
     <div className="flex flex-col items-center justify-center min-h-screen" style={{ background: '#0a0a12', gap: 16 }}>
       <div className="font-refinery" style={{ color: '#fcee09', fontSize: 24 }}>{status === 'closed' ? 'Room Closed' : 'Opponent Left'}</div>
-      <button className="font-blender" onClick={() => window.location.href = '/play/online'}
+      <button className="font-blender" onClick={() => window.location.href = '/'}
         style={{ color: '#00f0ff', background: 'transparent', border: '1px solid #00f0ff30', borderRadius: 8, padding: '10px 24px', cursor: 'pointer' }}>Back</button>
     </div>
   );
