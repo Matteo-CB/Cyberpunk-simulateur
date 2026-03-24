@@ -372,8 +372,8 @@ async function startServer() {
 
   const expressApp = express();
 
-  // Parse JSON for API routes handled by Express
-  expressApp.use(express.json());
+  // DO NOT use express.json() globally — it consumes the request body
+  // and breaks Next.js API routes that need req.json()
 
   // Health check endpoint
   expressApp.get('/api/health', (_req, res) => {
