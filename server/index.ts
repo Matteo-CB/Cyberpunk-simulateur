@@ -273,16 +273,29 @@ async function handleGameOver(room: RoomData, state: GameState, io: SocketIOServ
           const pid = playerIds[idx];
           const res = results[idx];
 
-          // Single update: ELO + wins/losses + gamesPlayed all at once
+          // Read current values first to avoid MongoDB increment on missing fields
+          const current = await prisma.user.findUnique({
+            where: { id: pid },
+            select: { gamesPlayed: true, wins: true, losses: true, draws: true },
+          });
+          const curGP = current?.gamesPlayed ?? 0;
+          const curW = current?.wins ?? 0;
+          const curL = current?.losses ?? 0;
+          const curD = current?.draws ?? 0;
+
+          // Single update with explicit values (not increment — avoids MongoDB missing field bug)
           const updated = await prisma.user.update({
             where: { id: pid },
             data: {
               elo: eloValues[idx],
-              gamesPlayed: { increment: 1 },
-              ...(res === 'win' ? { wins: { increment: 1 } } : res === 'loss' ? { losses: { increment: 1 } } : { draws: { increment: 1 } }),
+              gamesPlayed: curGP + 1,
+              wins: res === 'win' ? curW + 1 : curW,
+              losses: res === 'loss' ? curL + 1 : curL,
+              draws: res === 'draw' ? curD + 1 : curD,
             },
             select: { gamesPlayed: true, placementCompleted: true, discordId: true, elo: true, username: true },
           });
+          console.log(`[game-over] ${updated.username}: elo=${updated.elo}, gamesPlayed=${updated.gamesPlayed}`);
 
           if (updated.gamesPlayed >= 5 && !updated.placementCompleted) {
             await prisma.user.update({ where: { id: pid }, data: { placementCompleted: true } });
@@ -311,15 +324,7 @@ async function handleGameOver(room: RoomData, state: GameState, io: SocketIOServ
           }
         }
       } else {
-        // Casual: just wins/losses
-        await prisma.user.update({
-          where: { id: room.hostId },
-          data: p1Result === 'win' ? { wins: { increment: 1 } } : p1Result === 'loss' ? { losses: { increment: 1 } } : { draws: { increment: 1 } },
-        });
-        await prisma.user.update({
-          where: { id: room.guestId! },
-          data: p2Result === 'win' ? { wins: { increment: 1 } } : p2Result === 'loss' ? { losses: { increment: 1 } } : { draws: { increment: 1 } },
-        });
+        // Casual: no stats, no ELO, no placement — just save the game record
       }
     }
 
