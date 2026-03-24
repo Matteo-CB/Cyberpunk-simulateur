@@ -161,8 +161,10 @@ export default function GamePage() {
       }
     });
 
-    s.on('game:state-update', (state: GameState) => {
-      console.log('[game] Received game state');
+    s.on('game:state-update', (payload: any) => {
+      // Server sends { gameState, timestamp } — extract the actual state
+      const state: GameState = payload?.gameState || payload;
+      console.log('[game] Received game state, hasP1:', !!state?.player1, 'hasP2:', !!state?.player2);
       // Ensure all required fields exist after JSON serialization
       if (state) {
         state.effectAnimationQueue = state.effectAnimationQueue || [];
