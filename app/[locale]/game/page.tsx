@@ -19,41 +19,42 @@ export default function GamePage() {
   const [status, setStatus] = useState<string>('loading');
   const socketRef = useRef<Socket | null>(null);
   const roomCodeRef = useRef<string | null>(null);
-
-  const allCards = getAllCards();
-  const legends = allCards.filter((c) => c.card_type === 'legend');
-  const nonLegends = allCards.filter((c) => c.card_type !== 'legend');
-
-  const pickLegends = useCallback(() => {
-    const shuffled = [...legends].sort(() => Math.random() - 0.5);
-    const picked: CardData[] = [];
-    const usedNames = new Set<string>();
-    for (const l of shuffled) {
-      if (!usedNames.has(l.name_en) && picked.length < 3) { picked.push(l); usedNames.add(l.name_en); }
-    }
-    return picked;
-  }, [legends]);
-
-  const pickDeck = useCallback(() => {
-    const deck: CardData[] = [];
-    const counts = new Map<string, number>();
-    const shuffled = [...nonLegends].sort(() => Math.random() - 0.5);
-    for (const card of shuffled) {
-      if (deck.length >= 40) break;
-      const count = counts.get(card.id) || 0;
-      if (count < 3) { deck.push(card); counts.set(card.id, count + 1); }
-    }
-    while (deck.length < 40) {
-      const card = shuffled[Math.floor(Math.random() * shuffled.length)];
-      const count = counts.get(card.id) || 0;
-      if (count < 3) { deck.push(card); counts.set(card.id, count + 1); }
-    }
-    return deck;
-  }, [nonLegends]);
+  const gameCreatedRef = useRef(false);
 
   useEffect(() => {
     const configStr = sessionStorage.getItem('gameConfig');
     const config = configStr ? JSON.parse(configStr) : { mode: 'ai', difficulty: 'easy' };
+
+    const allCards = getAllCards();
+    const legends = allCards.filter((c) => c.card_type === 'legend');
+    const nonLegends = allCards.filter((c) => c.card_type !== 'legend');
+
+    const pickLegends = () => {
+      const shuffled = [...legends].sort(() => Math.random() - 0.5);
+      const picked: CardData[] = [];
+      const usedNames = new Set<string>();
+      for (const l of shuffled) {
+        if (!usedNames.has(l.name_en) && picked.length < 3) { picked.push(l); usedNames.add(l.name_en); }
+      }
+      return picked;
+    };
+
+    const pickDeck = () => {
+      const deck: CardData[] = [];
+      const counts = new Map<string, number>();
+      const shuffled = [...nonLegends].sort(() => Math.random() - 0.5);
+      for (const card of shuffled) {
+        if (deck.length >= 40) break;
+        const count = counts.get(card.id) || 0;
+        if (count < 3) { deck.push(card); counts.set(card.id, count + 1); }
+      }
+      while (deck.length < 40) {
+        const card = shuffled[Math.floor(Math.random() * shuffled.length)];
+        const count = counts.get(card.id) || 0;
+        if (count < 3) { deck.push(card); counts.set(card.id, count + 1); }
+      }
+      return deck;
+    };
 
     // ════════ AI MODE ════════
     if (config.mode !== 'online') {
@@ -86,107 +87,83 @@ export default function GamePage() {
     roomCodeRef.current = config.roomCode;
     const isHost = config.isHost;
     setMyPlayer(isHost ? 'player1' : 'player2');
-    setStatus(isHost ? 'waiting' : 'connecting');
+    setStatus('connecting');
 
-    const initOnline = async () => {
-      // Load deck
-      let p1Cards = pickDeck();
-      let p1Legends = pickLegends();
-      try {
-        const res = await fetch('/api/decks');
-        if (res.ok) {
-          const decks = await res.json();
-          if (Array.isArray(decks) && decks.length > 0) {
-            const cards = decks[0].cardIds.map((id: string) => getCardById(id)).filter(Boolean);
-            const legs = decks[0].legendIds.map((id: string) => getCardById(id)).filter(Boolean);
-            if (cards.length >= 40 && legs.length === 3) { p1Cards = cards; p1Legends = legs; }
-          }
-        }
-      } catch {}
+    const myDeck = pickDeck();
+    const myLegends = pickLegends();
 
-      // Get user
-      let userId = 'anon';
-      let username = 'Player';
-      try {
-        const me = await fetch('/api/user/me');
-        if (me.ok) { const d = await me.json(); userId = d.id; username = d.username; }
-      } catch {}
+    function createAndSendGame(s: Socket, userId: string) {
+      if (gameCreatedRef.current) return;
+      gameCreatedRef.current = true;
+      const state = GameEngine.createGame(
+        myDeck, myLegends, pickDeck(), pickLegends(),
+        { player1UserId: userId }
+      );
+      setGameState(state);
+      setStatus('playing');
+      s.emit('game:state-update', { roomCode: config.roomCode, gameState: state });
+    }
 
-      const s = io(SOCKET_URL, { transports: ['websocket', 'polling'] });
-      socketRef.current = s;
+    // Connect socket immediately — use polling first (more reliable behind proxy)
+    const s = io(SOCKET_URL, { transports: ['polling', 'websocket'] });
+    socketRef.current = s;
 
-      s.on('connect', () => {
-        s.emit('auth', { userId, username });
-        // Join the room
-        s.emit('room:join', { roomCode: config.roomCode, userId, username }, (res: any) => {
-          if (!res?.ok) {
-            setStatus('error');
-            return;
-          }
+    // Fetch user in background (don't block socket connection)
+    let userId = config.userId || 'anon';
+    let username = config.username || 'Player';
+    fetch('/api/user/me').then(r => r.ok ? r.json() : null).then(d => {
+      if (d) { userId = d.id; username = d.username; }
+    }).catch(() => {});
 
-          if (isHost) {
-            // Check if guest already joined (room has guestId)
-            if (res.room?.guestId) {
-              // Guest is already here — create game immediately
-              const state = GameEngine.createGame(
-                p1Cards, p1Legends,
-                pickDeck(), pickLegends(),
-                { player1UserId: userId }
-              );
-              setGameState(state);
-              setStatus('playing');
-              s.emit('game:state-update', { roomCode: config.roomCode, gameState: state });
-            } else {
-              setStatus('waiting');
-            }
+    s.on('connect', () => {
+      console.log('[game] Socket connected, joining room', config.roomCode);
+      s.emit('auth', { userId, username });
+      s.emit('room:join', { roomCode: config.roomCode, userId, username }, (res: any) => {
+        console.log('[game] Room join result:', res?.ok, 'guestId:', res?.room?.guestId);
+        if (!res?.ok) { setStatus('error'); return; }
+
+        if (isHost) {
+          if (res.room?.guestId && res.room.guestId !== userId) {
+            createAndSendGame(s, userId);
           } else {
-            // Guest: wait for host to send game state
             setStatus('waiting');
           }
-        });
-      });
-
-      // When opponent joins (I'm host), create game
-      s.on('room:player-joined', () => {
-        if (isHost) {
-          const state = GameEngine.createGame(
-            p1Cards, p1Legends,
-            pickDeck(), pickLegends(),
-            { player1UserId: userId }
-          );
-          setGameState(state);
-          setStatus('playing');
-          // Send state to opponent
-          s.emit('game:state-update', { roomCode: config.roomCode, gameState: state });
+        } else {
+          setStatus('waiting');
         }
       });
+    });
 
-      // Receive game state (I'm guest)
-      s.on('game:state-update', (state: GameState) => {
-        setGameState(state);
-        setStatus('playing');
+    s.on('room:player-joined', () => {
+      console.log('[game] Player joined event received, isHost:', isHost);
+      if (isHost) {
+        createAndSendGame(s, userId);
+      }
+    });
+
+    s.on('game:state-update', (state: GameState) => {
+      console.log('[game] Received game state');
+      setGameState(state);
+      setStatus('playing');
+    });
+
+    s.on('game:action-received', (data: { action: GameAction; player: PlayerID }) => {
+      setGameState(prev => {
+        if (!prev) return prev;
+        try { return GameEngine.applyAction(prev, data.player, data.action); } catch { return prev; }
       });
+    });
 
-      // Receive opponent's actions
-      s.on('game:action-received', (data: { action: GameAction; player: PlayerID }) => {
-        setGameState((prev) => {
-          if (!prev) return prev;
-          try { return GameEngine.applyAction(prev, data.player, data.action); } catch { return prev; }
-        });
-      });
+    s.on('room:player-left', () => setStatus('opponent-left'));
+    s.on('room:closed', () => setStatus('closed'));
+    s.on('connect_error', (err) => console.error('[game] Socket error:', err.message));
 
-      s.on('room:player-left', () => setStatus('opponent-left'));
-      s.on('room:closed', () => { setStatus('closed'); });
-    };
+    return () => { s.disconnect(); };
+  }, []);
 
-    initOnline();
-    return () => { socketRef.current?.disconnect(); };
-  }, [pickDeck, pickLegends]);
-
-  // Online action handler
   const handleOnlineAction = useCallback((action: GameAction) => {
     if (!socketRef.current || !roomCodeRef.current) return;
-    setGameState((prev) => {
+    setGameState(prev => {
       if (!prev) return prev;
       try {
         const ns = GameEngine.applyAction(prev, myPlayer, action);
@@ -196,75 +173,42 @@ export default function GamePage() {
     });
   }, [myPlayer]);
 
-  // ════════ RENDER ════════
-
-  if (status === 'error') {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen" style={{ background: '#0a0a12', gap: 16 }}>
-        <div className="font-refinery" style={{ color: '#ff003c', fontSize: 24 }}>Room not found</div>
-        <button className="font-blender" onClick={() => window.location.href = '/play/online'}
-          style={{ color: '#00f0ff', fontSize: 13, background: 'transparent', border: '1px solid #00f0ff30', borderRadius: 8, padding: '10px 24px', cursor: 'pointer' }}>
-          Back to Lobby
-        </button>
-      </div>
-    );
-  }
-
-  if (status === 'closed') {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen" style={{ background: '#0a0a12', gap: 16 }}>
-        <div className="font-refinery" style={{ color: '#ff003c', fontSize: 24 }}>Room Closed</div>
-        <button className="font-blender" onClick={() => window.location.href = '/play/online'}
-          style={{ color: '#00f0ff', fontSize: 13, background: 'transparent', border: '1px solid #00f0ff30', borderRadius: 8, padding: '10px 24px', cursor: 'pointer' }}>
-          Back to Lobby
-        </button>
-      </div>
-    );
-  }
-
-  if (status === 'opponent-left') {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen" style={{ background: '#0a0a12', gap: 16 }}>
-        <div className="font-refinery" style={{ color: '#fcee09', fontSize: 24 }}>Opponent Left</div>
-        <button className="font-blender" onClick={() => window.location.href = '/play/online'}
-          style={{ color: '#00f0ff', fontSize: 13, background: 'transparent', border: '1px solid #00f0ff30', borderRadius: 8, padding: '10px 24px', cursor: 'pointer' }}>
-          Back to Lobby
-        </button>
-      </div>
-    );
-  }
-
-  if (status === 'waiting') {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen" style={{ background: '#0a0a12', gap: 16 }}>
-        {roomCodeRef.current && (
-          <div className="font-refinery" style={{ color: '#fcee09', fontSize: 36, letterSpacing: '0.3em', textShadow: '0 0 20px rgba(252,238,9,0.3)' }}>
-            {roomCodeRef.current}
-          </div>
-        )}
-        <div className="font-blender text-sm uppercase tracking-widest animate-pulse" style={{ color: '#5a6a7a' }}>
-          Waiting for opponent...
-        </div>
-      </div>
-    );
-  }
-
-  if (status === 'connecting' || status === 'loading' || !gameState) {
-    return (
-      <div className="flex items-center justify-center min-h-screen" style={{ background: '#0a0a12' }}>
-        <div className="font-blender text-sm uppercase tracking-widest animate-pulse" style={{ color: '#00f0ff' }}>
-          {t('game.initializing')}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <GameBoard
-      initialState={gameState}
-      myPlayer={myPlayer}
-      isOnline={isOnline}
-      onAction={isOnline ? handleOnlineAction : undefined}
-    />
+  if (status === 'error') return (
+    <div className="flex flex-col items-center justify-center min-h-screen" style={{ background: '#0a0a12', gap: 16 }}>
+      <div className="font-refinery" style={{ color: '#ff003c', fontSize: 24 }}>Room not found</div>
+      <button className="font-blender" onClick={() => window.location.href = '/play/online'}
+        style={{ color: '#00f0ff', background: 'transparent', border: '1px solid #00f0ff30', borderRadius: 8, padding: '10px 24px', cursor: 'pointer' }}>Back</button>
+    </div>
   );
+
+  if (status === 'closed' || status === 'opponent-left') return (
+    <div className="flex flex-col items-center justify-center min-h-screen" style={{ background: '#0a0a12', gap: 16 }}>
+      <div className="font-refinery" style={{ color: '#fcee09', fontSize: 24 }}>{status === 'closed' ? 'Room Closed' : 'Opponent Left'}</div>
+      <button className="font-blender" onClick={() => window.location.href = '/play/online'}
+        style={{ color: '#00f0ff', background: 'transparent', border: '1px solid #00f0ff30', borderRadius: 8, padding: '10px 24px', cursor: 'pointer' }}>Back</button>
+    </div>
+  );
+
+  if (status === 'waiting' || status === 'connecting') return (
+    <div className="flex flex-col items-center justify-center min-h-screen" style={{ background: '#0a0a12', gap: 16 }}>
+      {roomCodeRef.current && (
+        <div className="font-refinery" style={{ color: '#fcee09', fontSize: 36, letterSpacing: '0.3em', textShadow: '0 0 20px rgba(252,238,9,0.3)' }}>
+          {roomCodeRef.current}
+        </div>
+      )}
+      <div className="font-blender text-sm uppercase tracking-widest animate-pulse" style={{ color: '#5a6a7a' }}>
+        {status === 'connecting' ? 'Connecting...' : 'Waiting for opponent...'}
+      </div>
+    </div>
+  );
+
+  if (!gameState) return (
+    <div className="flex items-center justify-center min-h-screen" style={{ background: '#0a0a12' }}>
+      <div className="font-blender text-sm uppercase tracking-widest animate-pulse" style={{ color: '#00f0ff' }}>
+        {t('game.initializing')}
+      </div>
+    </div>
+  );
+
+  return <GameBoard initialState={gameState} myPlayer={myPlayer} isOnline={isOnline} onAction={isOnline ? handleOnlineAction : undefined} />;
 }
