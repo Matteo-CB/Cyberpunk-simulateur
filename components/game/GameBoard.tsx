@@ -64,9 +64,10 @@ interface GameBoardProps {
   myPlayer: PlayerID;
   onAction?: (action: GameAction) => void;
   isOnline?: boolean;
+  onRegisterOpponentHandler?: (handler: (action: GameAction, player: PlayerID) => void) => void;
 }
 
-export default function GameBoard({ initialState, myPlayer, onAction, isOnline }: GameBoardProps) {
+export default function GameBoard({ initialState, myPlayer, onAction, isOnline, onRegisterOpponentHandler }: GameBoardProps) {
   const t = useTranslations();
   const locale = useLocale();
   const PHASE_LABELS: Record<GamePhase, string> = {
@@ -74,6 +75,16 @@ export default function GameBoard({ initialState, myPlayer, onAction, isOnline }
     play: t('game.phasePlay'), attack: t('game.phaseAttack'), defense: t('game.phaseDefense'), gameOver: t('game.phaseGameOver'),
   };
   const [gameState, setGameState] = useState<GameState>(initialState);
+  // Register handler for opponent actions (online mode)
+  useEffect(() => {
+    if (onRegisterOpponentHandler) {
+      onRegisterOpponentHandler((action: GameAction, player: PlayerID) => {
+        setGameState(prev => {
+          try { return GameEngine.applyAction(prev, player, action); } catch { return prev; }
+        });
+      });
+    }
+  }, [onRegisterOpponentHandler]);
   const [selectedCardIndex, setSelectedCardIndex] = useState<number | null>(null);
   const [hoveredCard, setHoveredCard] = useState<CardData | null>(null);
   const [previewCard, setPreviewCard] = useState<CardData | null>(null);
@@ -200,7 +211,6 @@ export default function GameBoard({ initialState, myPlayer, onAction, isOnline }
   }, [gameState, myPlayer]);
 
   const performAction = useCallback((action: GameAction) => {
-    if (isOnline && onAction) { onAction(action); return; }
     const ns = GameEngine.applyAction(gameState, myPlayer, action);
     setGameState(ns);
     setSelectedCardIndex(null);
@@ -208,6 +218,8 @@ export default function GameBoard({ initialState, myPlayer, onAction, isOnline }
       setSelectedAttacker(null);
     }
     setPendingGearIndex(null);
+    // In online mode, also send the action to the server
+    if (isOnline && onAction) { onAction(action); }
   }, [gameState, myPlayer, isOnline, onAction]);
 
   const playableIndices = useMemo(() => me.hand.map((c, i) => {

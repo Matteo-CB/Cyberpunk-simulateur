@@ -14,6 +14,7 @@ const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3000'
 export default function GamePage() {
   const t = useTranslations();
   const [gameState, setGameState] = useState<GameState | null>(null);
+  const opponentHandlerRef = useRef<((action: GameAction, player: PlayerID) => void) | null>(null);
   const [myPlayer, setMyPlayer] = useState<PlayerID>('player1');
   const [isOnline, setIsOnline] = useState(false);
   const [status, setStatus] = useState<string>('loading');
@@ -197,10 +198,10 @@ export default function GamePage() {
     });
 
     s.on('game:action-received', (data: { action: GameAction; player: PlayerID }) => {
-      setGameState(prev => {
-        if (!prev) return prev;
-        try { return GameEngine.applyAction(prev, data.player, data.action); } catch { return prev; }
-      });
+      // Opponent action — apply directly in GameBoard via registered handler
+      if (opponentHandlerRef.current) {
+        opponentHandlerRef.current(data.action, data.player);
+      }
     });
 
     s.on('room:player-left', () => setStatus('opponent-left'));
@@ -212,14 +213,8 @@ export default function GamePage() {
 
   const handleOnlineAction = useCallback((action: GameAction) => {
     if (!socketRef.current || !roomCodeRef.current) return;
-    setGameState(prev => {
-      if (!prev) return prev;
-      try {
-        const ns = GameEngine.applyAction(prev, myPlayer, action);
-        socketRef.current?.emit('game:action', { roomCode: roomCodeRef.current, action, player: myPlayer });
-        return ns;
-      } catch { return prev; }
-    });
+    // Just send to server — GameBoard already applied locally
+    socketRef.current.emit('game:action', { roomCode: roomCodeRef.current, action, player: myPlayer });
   }, [myPlayer]);
 
   if (status === 'error') return (
@@ -259,5 +254,11 @@ export default function GamePage() {
     </div>
   );
 
-  return <GameBoard initialState={gameState} myPlayer={myPlayer} isOnline={isOnline} onAction={isOnline ? handleOnlineAction : undefined} />;
+  return <GameBoard
+    initialState={gameState}
+    myPlayer={myPlayer}
+    isOnline={isOnline}
+    onAction={isOnline ? handleOnlineAction : undefined}
+    onRegisterOpponentHandler={isOnline ? (handler) => { opponentHandlerRef.current = handler; } : undefined}
+  />;
 }
