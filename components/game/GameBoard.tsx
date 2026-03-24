@@ -78,7 +78,14 @@ export default function GameBoard({ initialState, myPlayer, onAction, isOnline, 
   // Sync with server state in online mode — server is always authoritative
   useEffect(() => {
     if (serverState?.state?.player1 && serverState?.state?.player2) {
-      setGameState(serverState.state);
+      const s = serverState.state;
+      // Clear effect animations — each player sees their own effects from local apply
+      // Filter pending actions to only keep ones for THIS player (opponent's pending actions shouldn't show UI)
+      const cleaned: GameState = {
+        ...s,
+        effectAnimationQueue: [],
+      };
+      setGameState(cleaned);
     }
   }, [serverState?.seq]);
   const [selectedCardIndex, setSelectedCardIndex] = useState<number | null>(null);
