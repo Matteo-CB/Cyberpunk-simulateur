@@ -739,6 +739,7 @@ async function startServer() {
     if (user) {
       // If the guest leaves
       if (room.guestId === user.userId) {
+        const savedGuestId = room.guestId; // Save before reset — handleGameOver is async
         // Ranked game in progress → forfeit
         if (room.isRanked && room.gameState && !room.gameSaved) {
           const state = room.gameState as GameState;
@@ -748,7 +749,13 @@ async function startServer() {
               const newState = GameEngine.applyAction(state, 'player2', { type: 'FORFEIT', reason: 'abandon' });
               room.gameState = newState;
               io.to(roomCode).emit('game:state-update', { gameState: newState, timestamp: Date.now() });
-              handleGameOver(room, newState, io);
+              // Keep guestId until game is saved
+              handleGameOver(room, newState, io).finally(() => {
+                room.guestId = null;
+                room.guestUsername = null;
+              });
+              io.to(roomCode).emit('room:player-left', { userId: user.userId, username: user.username });
+              return; // Don't reset guestId synchronously
             } catch (err) {
               console.error('[socket] Error applying guest forfeit:', err);
             }
