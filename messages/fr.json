@@ -343,6 +343,7 @@
     "ramLimits": "Limites RAM",
     "ramExplain": "Les valeurs RAM de vos Legends definissent le max RAM pour chaque couleur. Les cartes avec un RAM superieur sont grisees.",
     "mainDeck": "Deck Principal ({count}/40 a 50)",
+    "clear": "Vider",
     "maxCopies": "Max 3 copies",
     "deckFull": "Deck plein (50 cartes)",
     "noRamSupport": "Aucune Legend {color} selectionnee",

@@ -113,6 +113,13 @@ export default function DeckBuilderPage() {
     }
   };
 
+  const clearDeck = () => {
+    setSelectedLegends([]);
+    setSelectedCards([]);
+    setDeckName('');
+    setEditingDeckId(null);
+  };
+
   // Get reason why a card can't be added
   const getCardDisabledReason = (card: CardData): string | null => {
     const count = selectedCards.filter((c) => c.id === card.id).length;
@@ -276,6 +283,7 @@ export default function DeckBuilderPage() {
                       if (selected) removeCard(selectedLegends.findIndex((l) => l.id === card.id), true);
                       else if (!disabled) addCard(card);
                     }}
+                    onContextMenu={(e) => { e.preventDefault(); setPreviewCard(card); }}
                   >
                     <CardFace card={card} size="sm" showGlow={selected} />
                     {/* RAM badge */}
@@ -395,6 +403,18 @@ export default function DeckBuilderPage() {
             >
               {t('save')}
             </button>
+            {(selectedLegends.length > 0 || selectedCards.length > 0) && (
+              <button
+                className="font-blender uppercase tracking-wider cursor-pointer"
+                style={{
+                  background: '#0a0a12', border: '1px solid #ff003c30',
+                  color: '#ff003c', fontSize: 13, padding: '10px 18px', borderRadius: 8,
+                }}
+                onClick={clearDeck}
+              >
+                {t('clear')}
+              </button>
+            )}
           </div>
 
           {/* Selected Legends */}
@@ -404,7 +424,7 @@ export default function DeckBuilderPage() {
             </div>
             <div className="flex" style={{ gap: 16 }}>
               {selectedLegends.map((l, i) => (
-                <div key={i} className="relative cursor-pointer" onClick={() => removeCard(i, true)} style={{ padding: 4 }}>
+                <div key={i} className="relative cursor-pointer" onClick={() => removeCard(i, true)} onContextMenu={(e) => { e.preventDefault(); setPreviewCard(l); }} style={{ padding: 4 }}>
                   <CardFace card={l} size="sm" showGlow />
                   <div className="absolute flex items-center justify-center font-blender" style={{
                     top: -4, right: -4, width: 20, height: 20, borderRadius: '50%',
@@ -447,9 +467,9 @@ export default function DeckBuilderPage() {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))', gap: 12 }}>
               {selectedCards.map((card, i) => (
-                <div key={`${card.id}-${i}`} className="relative cursor-pointer" onClick={() => removeCard(i, false)} style={{
-                  padding: 4, borderRadius: 8, transition: 'background 0.2s',
-                }}
+                <div key={`${card.id}-${i}`} className="relative cursor-pointer" onClick={() => removeCard(i, false)}
+                  onContextMenu={(e) => { e.preventDefault(); setPreviewCard(card); }}
+                  style={{ padding: 4, borderRadius: 8, transition: 'background 0.2s' }}
                   onMouseEnter={(e) => { e.currentTarget.style.background = '#1a1a25'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                 >

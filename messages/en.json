@@ -343,6 +343,7 @@
     "ramLimits": "RAM Limits",
     "ramExplain": "Your Legends' RAM values set the max RAM for each color. Cards with higher RAM than your limit are grayed out.",
     "mainDeck": "Main Deck ({count}/40 to 50)",
+    "clear": "Clear",
     "maxCopies": "Max 3 copies",
     "deckFull": "Deck is full (50 cards)",
     "noRamSupport": "No {color} Legend selected",
