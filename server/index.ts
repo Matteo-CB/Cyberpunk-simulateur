@@ -220,6 +220,9 @@ async function handleGameOver(room: RoomData, state: GameState, io: SocketIOServ
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${port}`;
 
+  console.log(`[game-over] Room ${room.code}: winner=${state.winner}, reason=${state.winReason}, ranked=${room.isRanked}, host=${room.hostId}, guest=${room.guestId}`);
+  console.log(`[game-over] Calling API at ${appUrl}/api/game, INTERNAL_API_KEY set: ${!!INTERNAL_API_KEY}`);
+
   try {
     // Step 1: Create game record
     const createRes = await fetch(`${appUrl}/api/game`, {
@@ -234,6 +237,7 @@ async function handleGameOver(room: RoomData, state: GameState, io: SocketIOServ
       }),
     });
     const game = await createRes.json();
+    console.log(`[game-over] POST /api/game response:`, JSON.stringify(game).slice(0, 200));
     if (!game?.id) {
       console.error('[socket] Failed to create game record:', game);
       return;
@@ -257,6 +261,7 @@ async function handleGameOver(room: RoomData, state: GameState, io: SocketIOServ
       }),
     });
     const result = await completeRes.json();
+    console.log(`[game-over] PUT /api/game response:`, JSON.stringify(result).slice(0, 300));
 
     // Broadcast game:ended with ELO info to clients
     io.to(room.code).emit('game:ended', {
