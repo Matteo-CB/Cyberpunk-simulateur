@@ -106,6 +106,7 @@ export default function GameBoard({ initialState, myPlayer, onAction, isOnline, 
   const [showLog, setShowLog] = useState(false);
   const [selectedAttacker, setSelectedAttacker] = useState<string | null>(null);
   const [pendingGearIndex, setPendingGearIndex] = useState<number | null>(null);
+  const [playSellChoice, setPlaySellChoice] = useState<{ cardIndex: number; card: CardData } | null>(null);
 
   // Turn timer countdown
   const [turnTimeRemaining, setTurnTimeRemaining] = useState<number | null>(null);
@@ -508,6 +509,17 @@ export default function GameBoard({ initialState, myPlayer, onAction, isOnline, 
               const c = me.hand[i];
               if (gameState.phase === 'play' && isMyTurn) {
                 const avail = getAvailableEddies(me);
+                const canPlay = (c.card_type === 'unit' && c.cost !== null && c.cost <= avail)
+                  || (c.card_type === 'gear' && c.cost !== null && c.cost <= avail && me.field.length > 0)
+                  || (c.card_type === 'program' && c.cost !== null && c.cost <= avail);
+                const canSell = c.sell_tag && !me.hasSoldThisTurn;
+
+                // Both playable and sellable — let the player choose
+                if (canPlay && canSell) {
+                  setPlaySellChoice({ cardIndex: i, card: c });
+                  return;
+                }
+
                 if (c.card_type === 'unit' && c.cost !== null && c.cost <= avail) {
                   performAction({ type: 'PLAY_UNIT', cardIndex: i });
                   return;
@@ -524,7 +536,7 @@ export default function GameBoard({ initialState, myPlayer, onAction, isOnline, 
                   performAction({ type: 'PLAY_PROGRAM', cardIndex: i });
                   return;
                 }
-                if (c.sell_tag && !me.hasSoldThisTurn) {
+                if (canSell) {
                   performAction({ type: 'SELL_CARD', cardIndex: i });
                   return;
                 }
@@ -604,6 +616,76 @@ export default function GameBoard({ initialState, myPlayer, onAction, isOnline, 
       {gameState.phase === 'gameOver' && (
         <GameEndScreen isWinner={gameState.winner === myPlayer} winReason={gameState.winReason || 'unknown'} playerScore={me.gigArea.length} opponentScore={opp.gigArea.length} eloChange={eloChange} isRanked={isRanked} onMenu={() => { window.location.href = '/'; }} />
       )}
+
+      {/* Play or Sell choice dialog */}
+      {playSellChoice && (
+        <motion.div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+          style={{ background: 'rgba(2,2,8,0.85)' }}
+          onClick={() => setPlaySellChoice(null)}
+        >
+          <motion.div
+            initial={{ scale: 0.9 }} animate={{ scale: 1 }}
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              gap: 'clamp(12px, 3vw, 18px)',
+              padding: 'clamp(16px, 4vw, 28px)',
+              borderRadius: 12,
+              background: 'linear-gradient(180deg, #0d0d1a 0%, #0a0a14 100%)',
+              border: '1px solid rgba(252,238,9,0.2)',
+              maxWidth: 320, width: '90%',
+            }}
+          >
+            <div className="font-blender" style={{ fontSize: 'clamp(11px, 3vw, 14px)', color: '#e0e8f0', textAlign: 'center' }}>
+              {locale === 'fr'
+                ? `${playSellChoice.card.name_fr}`
+                : `${playSellChoice.card.name_en}`}
+            </div>
+            <div style={{ display: 'flex', gap: 'clamp(8px, 2vw, 14px)', flexWrap: 'wrap', justifyContent: 'center' }}>
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                className="font-blender cursor-pointer"
+                style={{
+                  fontSize: 'clamp(11px, 2.5vw, 13px)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
+                  padding: 'clamp(8px, 2vw, 12px) clamp(16px, 4vw, 28px)', borderRadius: 8,
+                  background: 'rgba(0,240,255,0.06)', border: '1px solid rgba(0,240,255,0.4)', color: '#00f0ff',
+                }}
+                onClick={() => {
+                  const idx = playSellChoice.cardIndex;
+                  const c = playSellChoice.card;
+                  setPlaySellChoice(null);
+                  if (c.card_type === 'unit') performAction({ type: 'PLAY_UNIT', cardIndex: idx });
+                  else if (c.card_type === 'gear') {
+                    if (me.field.length === 1) performAction({ type: 'PLAY_GEAR', cardIndex: idx, targetInstanceId: me.field[0].instanceId });
+                    else setPendingGearIndex(idx);
+                  } else if (c.card_type === 'program') performAction({ type: 'PLAY_PROGRAM', cardIndex: idx });
+                }}
+              >
+                {t('game.playCard')}
+              </motion.button>
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                className="font-blender cursor-pointer"
+                style={{
+                  fontSize: 'clamp(11px, 2.5vw, 13px)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
+                  padding: 'clamp(8px, 2vw, 12px) clamp(16px, 4vw, 28px)', borderRadius: 8,
+                  background: 'rgba(252,238,9,0.06)', border: '1px solid rgba(252,238,9,0.4)', color: '#fcee09',
+                }}
+                onClick={() => {
+                  const idx = playSellChoice.cardIndex;
+                  setPlaySellChoice(null);
+                  performAction({ type: 'SELL_CARD', cardIndex: idx });
+                }}
+              >
+                {t('game.sellCard')}
+              </motion.button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+
       <PendingActionOverlay
         gameState={gameState}
         myPlayer={myPlayer}
