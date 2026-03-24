@@ -8,12 +8,13 @@ interface GameEndScreenProps {
   winReason: string;
   playerScore: number;
   opponentScore: number;
-  eloChange?: number;
+  eloChange?: number | null;
+  isRanked?: boolean;
   onMenu?: () => void;
 }
 
 export default function GameEndScreen({
-  isWinner, winReason, playerScore, opponentScore, eloChange, onMenu,
+  isWinner, winReason, playerScore, opponentScore, eloChange, isRanked, onMenu,
 }: GameEndScreenProps) {
   const t = useTranslations();
   const title = isWinner ? t('game.legendary') : t('game.flatlined');
@@ -78,8 +79,8 @@ export default function GameEndScreen({
           </div>
         </div>
 
-        {/* ELO change */}
-        {eloChange !== undefined && (
+        {/* ELO change (ranked only) */}
+        {isRanked && eloChange !== undefined && eloChange !== null && (
           <div className="font-blender" style={{
             fontSize: 14, fontWeight: 700,
             color: eloChange >= 0 ? '#22c55e' : '#ff003c',
@@ -88,6 +89,15 @@ export default function GameEndScreen({
             border: `1px solid ${eloChange >= 0 ? 'rgba(34,197,94,0.2)' : 'rgba(255,0,60,0.2)'}`,
           }}>
             ELO {eloChange >= 0 ? '+' : ''}{eloChange}
+          </div>
+        )}
+
+        {/* Casual match indicator */}
+        {isRanked === false && (
+          <div className="font-blender" style={{
+            fontSize: 11, color: '#5a6a7a', textTransform: 'uppercase', letterSpacing: '0.1em',
+          }}>
+            {t('game.casualMatch')}
           </div>
         )}
 

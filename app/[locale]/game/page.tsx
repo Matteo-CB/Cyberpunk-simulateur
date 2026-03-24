@@ -18,10 +18,17 @@ export default function GamePage() {
   const seqRef = useRef(0);
   const [myPlayer, setMyPlayer] = useState<PlayerID>('player1');
   const [isOnline, setIsOnline] = useState(false);
+  const [isRanked, setIsRanked] = useState(false);
   const [status, setStatus] = useState<string>('loading');
   const socketRef = useRef<Socket | null>(null);
   const roomCodeRef = useRef<string | null>(null);
   const gameCreatedRef = useRef(false);
+
+  // Timer state
+  const [timerEnd, setTimerEnd] = useState<number | null>(null);
+
+  // Game end data (ELO change from server)
+  const [gameEndData, setGameEndData] = useState<{ eloChange: number | null; isRanked: boolean } | null>(null);
 
   useEffect(() => {
     const configStr = sessionStorage.getItem('gameConfig');
@@ -86,6 +93,7 @@ export default function GamePage() {
 
     // ════════ ONLINE MODE ════════
     setIsOnline(true);
+    setIsRanked(config.gameMode === 'ranked');
     roomCodeRef.current = config.roomCode;
     const isHost = config.isHost;
     setMyPlayer(isHost ? 'player1' : 'player2');
@@ -200,6 +208,21 @@ export default function GamePage() {
       setStatus('playing');
     });
 
+    // Timer events
+    s.on('game:timer-start', (data: { activePlayer: string; duration: number; startedAt: number }) => {
+      setTimerEnd(data.startedAt + data.duration);
+    });
+
+    s.on('game:timer-expired', () => {
+      setTimerEnd(null);
+    });
+
+    // Game end event (ELO changes from server)
+    s.on('game:ended', (data: { eloChange: number | null; isRanked: boolean }) => {
+      setGameEndData({ eloChange: data.eloChange, isRanked: data.isRanked });
+      setTimerEnd(null);
+    });
+
     s.on('room:player-left', () => setStatus('opponent-left'));
     s.on('room:closed', () => setStatus('closed'));
     s.on('connect_error', (err) => console.error('[game] Socket error:', err.message));
@@ -254,7 +277,10 @@ export default function GamePage() {
     initialState={gameState}
     myPlayer={myPlayer}
     isOnline={isOnline}
+    isRanked={isRanked}
     onAction={isOnline ? handleOnlineAction : undefined}
     serverState={isOnline ? serverState : undefined}
+    turnTimerEnd={isOnline ? timerEnd : undefined}
+    eloChange={gameEndData?.eloChange}
   />;
 }

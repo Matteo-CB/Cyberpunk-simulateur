@@ -4,6 +4,7 @@ import { Server as SocketIOServer, Socket } from 'socket.io';
 import next from 'next';
 import { GameEngine } from '@/lib/engine/GameEngine';
 import type { GameState, GameAction, PlayerID } from '@/lib/engine/types';
+import { getOpponent } from '@/lib/engine/types';
 
 // ------------------------------------------------------------------
 // Configuration
@@ -12,6 +13,10 @@ import type { GameState, GameAction, PlayerID } from '@/lib/engine/types';
 const dev = process.env.NODE_ENV !== 'production';
 const port = parseInt(process.env.PORT || '3000', 10);
 const hostname = process.env.HOSTNAME || 'localhost';
+const INTERNAL_API_KEY = process.env.INTERNAL_API_KEY || '';
+
+const RANKED_TURN_TIMEOUT_MS = 2 * 60 * 1000; // 2 minutes
+const CASUAL_TURN_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
 
 // CORS origins: allow localhost in dev plus the configured socket URL
 const allowedOrigins: string[] = [
@@ -41,6 +46,9 @@ interface RoomData {
   isPrivate: boolean;
   isRanked: boolean;
   gameMode: 'casual' | 'ranked';
+  gameSaved: boolean;
+  hasActedThisTurn: { player1: boolean; player2: boolean };
+  lastActivePlayer: PlayerID | null;
 }
 
 interface ChatPayload {
@@ -63,14 +71,16 @@ interface GameStatePayload {
 }
 
 // ------------------------------------------------------------------
-// In-memory room store
+// In-memory stores
 // ------------------------------------------------------------------
 
 const rooms = new Map<string, RoomData>();
 const socketToRoom = new Map<string, string>();
 const socketToUser = new Map<string, { userId: string; username: string }>();
+const turnTimers = new Map<string, NodeJS.Timeout>();
 
 let ioRef: any = null;
+
 function broadcastRoomList() {
   if (!ioRef) return;
   const publicRooms = Array.from(rooms.values())
@@ -83,6 +93,185 @@ function broadcastRoomList() {
       createdAt: r.createdAt,
     }));
   ioRef.emit('room:list-update', publicRooms);
+}
+
+// ------------------------------------------------------------------
+// Turn Timer Management
+// ------------------------------------------------------------------
+
+function clearTurnTimer(roomCode: string) {
+  const timer = turnTimers.get(roomCode);
+  if (timer) {
+    clearTimeout(timer);
+    turnTimers.delete(roomCode);
+  }
+}
+
+function startTurnTimer(roomCode: string, io: SocketIOServer) {
+  clearTurnTimer(roomCode);
+  const room = rooms.get(roomCode);
+  if (!room || !room.gameState) return;
+
+  const state = room.gameState as GameState;
+  if (state.phase === 'gameOver' || state.phase === 'setup') return;
+
+  // Determine timeout duration
+  const duration = room.isRanked ? RANKED_TURN_TIMEOUT_MS : CASUAL_TURN_TIMEOUT_MS;
+  const activePlayer = state.activePlayer;
+  const timerStart = Date.now();
+
+  // Track turn change — reset hasActedThisTurn when active player changes
+  if (room.lastActivePlayer !== activePlayer) {
+    room.hasActedThisTurn[activePlayer] = false;
+    room.lastActivePlayer = activePlayer;
+  }
+
+  // Notify clients
+  io.to(roomCode).emit('game:timer-start', {
+    activePlayer,
+    duration,
+    startedAt: timerStart,
+  });
+
+  const timer = setTimeout(() => {
+    const currentRoom = rooms.get(roomCode);
+    if (!currentRoom || !currentRoom.gameState || currentRoom.gameSaved) return;
+
+    const currentState = currentRoom.gameState as GameState;
+    if (currentState.phase === 'gameOver') return;
+    if (currentState.activePlayer !== activePlayer) return; // Turn already changed
+
+    const hasActed = currentRoom.hasActedThisTurn[activePlayer];
+
+    if (!hasActed) {
+      // Player did NOTHING for entire timer → FORFEIT
+      console.log(`[timer] ${activePlayer} timed out with no action in room ${roomCode} — forfeit`);
+      try {
+        const newState = GameEngine.applyAction(currentState, activePlayer, { type: 'FORFEIT', reason: 'timeout' });
+        currentRoom.gameState = newState;
+        io.to(roomCode).emit('game:state-update', { gameState: newState, timestamp: Date.now() });
+        io.to(roomCode).emit('game:timer-expired', { player: activePlayer, forfeit: true });
+        if (newState.phase === 'gameOver') {
+          handleGameOver(currentRoom, newState, io);
+        }
+      } catch (err) {
+        console.error('[timer] Error applying forfeit:', err);
+      }
+    } else {
+      // Player acted but didn't finish → pass turn
+      console.log(`[timer] ${activePlayer} timed out (acted) in room ${roomCode} — passing turn`);
+      let newState = currentState;
+      try {
+        // Clear any pending actions first
+        newState = { ...newState, pendingActions: [], pendingEffects: [], effectAnimationQueue: [] } as GameState;
+
+        // Force through phases to end the turn
+        if (newState.phase === 'defense') {
+          // Auto-decline defense
+          newState = GameEngine.applyAction(newState, getOpponent(activePlayer), { type: 'DECLINE_DEFENSE' });
+        }
+        if (newState.phase === 'ready') {
+          // Auto-choose first die
+          const playerState = activePlayer === 'player1' ? newState.player1 : newState.player2;
+          if (playerState.fixerArea.length > 0) {
+            newState = GameEngine.applyAction(newState, activePlayer, { type: 'CHOOSE_GIG_DIE', dieIndex: 0 });
+          }
+        }
+        if (newState.phase === 'play') {
+          newState = GameEngine.applyAction(newState, activePlayer, { type: 'END_PLAY_PHASE' });
+        }
+        if (newState.phase === 'attack') {
+          newState = GameEngine.applyAction(newState, activePlayer, { type: 'END_ATTACK_PHASE' });
+        }
+      } catch (err) {
+        console.error('[timer] Error forcing turn end, falling back to forfeit:', err);
+        try {
+          newState = GameEngine.applyAction(currentState, activePlayer, { type: 'FORFEIT', reason: 'timeout' });
+        } catch (err2) {
+          console.error('[timer] Forfeit also failed:', err2);
+          return;
+        }
+      }
+
+      currentRoom.gameState = newState;
+      io.to(roomCode).emit('game:state-update', { gameState: newState, timestamp: Date.now() });
+      io.to(roomCode).emit('game:timer-expired', { player: activePlayer, forfeit: false });
+
+      if (newState.phase === 'gameOver') {
+        handleGameOver(currentRoom, newState, io);
+      } else {
+        // Start timer for next player
+        startTurnTimer(roomCode, io);
+      }
+    }
+  }, duration);
+
+  turnTimers.set(roomCode, timer);
+}
+
+// ------------------------------------------------------------------
+// Game-over Detection & Saving
+// ------------------------------------------------------------------
+
+async function handleGameOver(room: RoomData, state: GameState, io: SocketIOServer) {
+  if (room.gameSaved) return;
+  room.gameSaved = true;
+  clearTurnTimer(room.code);
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${port}`;
+
+  try {
+    // Step 1: Create game record
+    const createRes = await fetch(`${appUrl}/api/game`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-internal-key': INTERNAL_API_KEY },
+      body: JSON.stringify({
+        player1Id: room.hostId,
+        player2Id: room.guestId,
+        isAiGame: false,
+        isRanked: room.isRanked,
+        gameState: { turn: state.turn, winReason: state.winReason, winner: state.winner },
+      }),
+    });
+    const game = await createRes.json();
+    if (!game?.id) {
+      console.error('[socket] Failed to create game record:', game);
+      return;
+    }
+
+    // Step 2: Complete game with winner and scores
+    const winnerId = state.winner === 'player1' ? room.hostId
+                   : state.winner === 'player2' ? room.guestId
+                   : null;
+    const p1Score = state.player1.gigArea.length;
+    const p2Score = state.player2.gigArea.length;
+
+    const completeRes = await fetch(`${appUrl}/api/game`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'x-internal-key': INTERNAL_API_KEY },
+      body: JSON.stringify({
+        id: game.id,
+        winnerId,
+        player1Score: p1Score,
+        player2Score: p2Score,
+      }),
+    });
+    const result = await completeRes.json();
+
+    // Broadcast game:ended with ELO info to clients
+    io.to(room.code).emit('game:ended', {
+      winnerId,
+      winReason: state.winReason,
+      player1Score: p1Score,
+      player2Score: p2Score,
+      eloChange: result.eloChange ?? null,
+      isRanked: room.isRanked,
+    });
+
+    console.log(`[socket] Game saved for room ${room.code}: winner=${state.winner}, ranked=${room.isRanked}, eloChange=${result.eloChange ?? 'N/A'}`);
+  } catch (err) {
+    console.error('[socket] Error saving game:', err);
+  }
 }
 
 // ------------------------------------------------------------------
@@ -182,6 +371,9 @@ async function startServer() {
           isPrivate: data.isPrivate || false,
           isRanked: data.isRanked || false,
           gameMode: data.gameMode || 'casual',
+          gameSaved: false,
+          hasActedThisTurn: { player1: false, player2: false },
+          lastActivePlayer: null,
         };
 
         rooms.set(roomCode, room);
@@ -190,11 +382,10 @@ async function startServer() {
         socketToUser.set(socket.id, { userId, username });
 
         io.to(roomCode).emit('room:updated', room);
-        // Broadcast updated public room list to all clients
         broadcastRoomList();
         if (ack) ack({ ok: true });
 
-        console.log(`[socket] Room created: ${roomCode} by ${username}`);
+        console.log(`[socket] Room created: ${roomCode} by ${username} (${data.gameMode || 'casual'})`);
       }
     );
 
@@ -297,12 +488,16 @@ async function startServer() {
         // Apply the action via GameEngine if there is game state
         if (room.gameState) {
           try {
+            const oldState = room.gameState as GameState;
             const newState = GameEngine.applyAction(
-              room.gameState as GameState,
+              oldState,
               player as PlayerID,
               action as GameAction
             );
             room.gameState = newState;
+
+            // Track that this player acted
+            room.hasActedThisTurn[player as PlayerID] = true;
 
             // Broadcast updated state to ALL clients in the room
             io.to(roomCode).emit('game:state-update', {
@@ -310,23 +505,31 @@ async function startServer() {
               timestamp: Date.now(),
             });
 
-            // Notify the player whose turn it is
-            const activePlayer = newState.activePlayer;
-            // Find all sockets in the room and emit game:your-turn to the active player
-            const socketsInRoom = io.sockets.adapter.rooms.get(roomCode);
-            if (socketsInRoom) {
-              for (const socketId of socketsInRoom) {
-                const userData = socketToUser.get(socketId);
-                if (userData) {
-                  // Determine which player this socket is
-                  const isPlayer1 = room.hostId === userData.userId;
-                  const socketPlayer: PlayerID = isPlayer1 ? 'player1' : 'player2';
-                  if (socketPlayer === activePlayer) {
-                    io.to(socketId).emit('game:your-turn', {
-                      player: activePlayer,
-                      phase: newState.phase,
-                      turn: newState.turn,
-                    });
+            // Check for game over
+            if (newState.phase === 'gameOver') {
+              handleGameOver(room, newState, io);
+            } else {
+              // Restart timer on every action (for online games)
+              if (room.guestId) {
+                startTurnTimer(roomCode, io);
+              }
+
+              // Notify the player whose turn it is
+              const activePlayer = newState.activePlayer;
+              const socketsInRoom = io.sockets.adapter.rooms.get(roomCode);
+              if (socketsInRoom) {
+                for (const socketId of socketsInRoom) {
+                  const userData = socketToUser.get(socketId);
+                  if (userData) {
+                    const isPlayer1 = room.hostId === userData.userId;
+                    const socketPlayer: PlayerID = isPlayer1 ? 'player1' : 'player2';
+                    if (socketPlayer === activePlayer) {
+                      io.to(socketId).emit('game:your-turn', {
+                        player: activePlayer,
+                        phase: newState.phase,
+                        turn: newState.turn,
+                      });
+                    }
                   }
                 }
               }
@@ -365,6 +568,14 @@ async function startServer() {
         gameState,
         timestamp: Date.now(),
       });
+
+      // Start timer when game state is first set (both players present)
+      if (room.guestId && gameState) {
+        const state = gameState as GameState;
+        if (state.phase && state.phase !== 'gameOver') {
+          startTurnTimer(roomCode, io);
+        }
+      }
     });
 
     // --- Chat: Send ---
@@ -421,6 +632,22 @@ async function startServer() {
     if (user) {
       // If the guest leaves
       if (room.guestId === user.userId) {
+        // Ranked game in progress → forfeit
+        if (room.isRanked && room.gameState && !room.gameSaved) {
+          const state = room.gameState as GameState;
+          if (state.phase !== 'gameOver') {
+            console.log(`[socket] Guest ${user.username} left ranked game in room ${roomCode} — forfeit`);
+            try {
+              const newState = GameEngine.applyAction(state, 'player2', { type: 'FORFEIT', reason: 'abandon' });
+              room.gameState = newState;
+              io.to(roomCode).emit('game:state-update', { gameState: newState, timestamp: Date.now() });
+              handleGameOver(room, newState, io);
+            } catch (err) {
+              console.error('[socket] Error applying guest forfeit:', err);
+            }
+          }
+        }
+
         room.guestId = null;
         room.guestUsername = null;
         io.to(roomCode).emit('room:player-left', {
@@ -437,14 +664,31 @@ async function startServer() {
           if (!stillRoom) return; // Already deleted
           // Check if host reconnected (a new socket joined with same userId)
           let hostReconnected = false;
-          for (const [, u] of socketToUser.entries()) {
+          for (const [sid, u] of socketToUser.entries()) {
             if (u.userId === user.userId) {
-              const sr = socketToRoom.get(Array.from(socketToUser.entries()).find(([, v]) => v.userId === u.userId)?.[0] || '');
+              const sr = socketToRoom.get(sid);
               if (sr === roomCode) { hostReconnected = true; break; }
             }
           }
           if (!hostReconnected) {
+            // Ranked game in progress → forfeit the host
+            if (stillRoom.isRanked && stillRoom.gameState && !stillRoom.gameSaved) {
+              const state = stillRoom.gameState as GameState;
+              if (state.phase !== 'gameOver') {
+                console.log(`[socket] Host ${user.username} did not reconnect to ranked game — forfeit`);
+                try {
+                  const newState = GameEngine.applyAction(state, 'player1', { type: 'FORFEIT', reason: 'abandon' });
+                  stillRoom.gameState = newState;
+                  io.to(roomCode).emit('game:state-update', { gameState: newState, timestamp: Date.now() });
+                  handleGameOver(stillRoom, newState, io);
+                } catch (err) {
+                  console.error('[socket] Error applying host forfeit:', err);
+                }
+              }
+            }
+
             io.to(roomCode).emit('room:closed', { reason: 'Host left the room' });
+            clearTurnTimer(roomCode);
             rooms.delete(roomCode);
             broadcastRoomList();
             console.log(`[socket] Room ${roomCode} closed after grace period`);
@@ -468,6 +712,7 @@ async function startServer() {
     for (const [code, room] of rooms.entries()) {
       if (now - room.createdAt > ROOM_TTL_MS) {
         io.to(code).emit('room:closed', { reason: 'Room expired' });
+        clearTurnTimer(code);
         rooms.delete(code);
         console.log(`[socket] Stale room cleaned up: ${code}`);
       }
@@ -491,6 +736,11 @@ async function startServer() {
 
   function gracefulShutdown(signal: string) {
     console.log(`\n[server] Received ${signal}. Shutting down gracefully...`);
+
+    // Clear all turn timers
+    for (const [code] of turnTimers) {
+      clearTurnTimer(code);
+    }
 
     // Notify all connected clients
     io.emit('server:shutdown', {

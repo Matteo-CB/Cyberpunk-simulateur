@@ -237,3 +237,55 @@ export async function sendRankDownWebhook(
     return false;
   }
 }
+
+/**
+ * Send a placement completion notification when a player finishes their 5 placement games.
+ */
+export async function sendPlacementCompletedWebhook(
+  discordId: string | null,
+  username: string,
+  tier: RankTier,
+  elo: number
+): Promise<boolean> {
+  if (!WEBHOOK_URL) return false;
+
+  try {
+    const symbol = TIER_SYMBOLS[tier.key] || '';
+    const canMention = discordId ? await isUserOnServer(discordId) : false;
+    const mention = canMention ? `<@${discordId}>` : `**${username}**`;
+    const flavorText = getFlavorText(tier.key);
+
+    const payload = {
+      content: `${mention} completed placement and ranked as **${tier.name}** ${symbol}`,
+      allowed_mentions: { users: canMention && discordId ? [discordId] : [] },
+      embeds: [{
+        title: `${symbol} Placement Complete! ${symbol}`,
+        description: `${mention} finished their 5 placement games and entered the ranked ladder as **${tier.name}** ${symbol}\n\n*${flavorText}*`,
+        color: hexToDecimal(tier.color),
+        fields: [
+          { name: 'Ranked Tier', value: `${symbol} **${tier.name}** ${symbol}`, inline: true },
+          { name: 'Starting ELO', value: `\`${elo}\``, inline: true },
+          { name: 'Placement Games', value: '5/5', inline: true },
+        ],
+        footer: {
+          text: 'Cyberpunk TCG Simulator',
+        },
+        timestamp: new Date().toISOString(),
+      }],
+    };
+
+    const response = await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (response.ok) {
+      console.log(`[placementWebhook] Placement notification sent: ${username} -> ${tier.name}`);
+    }
+    return response.ok;
+  } catch (error) {
+    console.error('[placementWebhook] Error:', error);
+    return false;
+  }
+}

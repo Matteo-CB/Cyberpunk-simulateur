@@ -64,10 +64,13 @@ interface GameBoardProps {
   myPlayer: PlayerID;
   onAction?: (action: GameAction) => void;
   isOnline?: boolean;
+  isRanked?: boolean;
   serverState?: { state: GameState; seq: number } | null;
+  turnTimerEnd?: number | null;
+  eloChange?: number | null;
 }
 
-export default function GameBoard({ initialState, myPlayer, onAction, isOnline, serverState }: GameBoardProps) {
+export default function GameBoard({ initialState, myPlayer, onAction, isOnline, isRanked, serverState, turnTimerEnd, eloChange }: GameBoardProps) {
   const t = useTranslations();
   const locale = useLocale();
   const PHASE_LABELS: Record<GamePhase, string> = {
@@ -94,6 +97,19 @@ export default function GameBoard({ initialState, myPlayer, onAction, isOnline, 
   const [showLog, setShowLog] = useState(false);
   const [selectedAttacker, setSelectedAttacker] = useState<string | null>(null);
   const [pendingGearIndex, setPendingGearIndex] = useState<number | null>(null);
+
+  // Turn timer countdown
+  const [turnTimeRemaining, setTurnTimeRemaining] = useState<number | null>(null);
+  useEffect(() => {
+    if (!turnTimerEnd) { setTurnTimeRemaining(null); return; }
+    const tick = () => {
+      const remaining = Math.max(0, turnTimerEnd - Date.now());
+      setTurnTimeRemaining(remaining);
+    };
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [turnTimerEnd]);
 
   const me = getPlayerState(gameState, myPlayer);
   const opp = getPlayerState(gameState, getOpponent(myPlayer));
@@ -447,6 +463,21 @@ export default function GameBoard({ initialState, myPlayer, onAction, isOnline, 
             <motion.span className="font-blender" style={{ fontSize: 8, textTransform: 'uppercase', color: '#ff003c', padding: '2px 8px', borderRadius: 20, background: '#ff003c10', border: '1px solid #ff003c30' }}
               animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}>OT</motion.span>
           )}
+          {isOnline && turnTimeRemaining !== null && turnTimeRemaining !== undefined && gameState.phase !== 'gameOver' && (
+            <motion.span className="font-blender" style={{
+              fontSize: 10, fontWeight: 700, letterSpacing: '0.08em',
+              padding: '2px 10px', borderRadius: 20,
+              color: turnTimeRemaining < 30000 ? '#ff003c' : turnTimeRemaining < 60000 ? '#fcee09' : '#00f0ff',
+              background: turnTimeRemaining < 30000 ? '#ff003c10' : 'transparent',
+              border: `1px solid ${turnTimeRemaining < 30000 ? '#ff003c30' : turnTimeRemaining < 60000 ? '#fcee0930' : '#00f0ff20'}`,
+              whiteSpace: 'nowrap',
+            }}
+              animate={turnTimeRemaining < 30000 ? { opacity: [0.6, 1, 0.6] } : undefined}
+              transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              {Math.floor(turnTimeRemaining / 60000)}:{String(Math.floor((turnTimeRemaining % 60000) / 1000)).padStart(2, '0')}
+            </motion.span>
+          )}
           <div style={{ flex: 1, height: 2, background: `linear-gradient(90deg, transparent, ${GOLD_DIM}, ${GOLD}, ${GOLD_DIM}, transparent)` }} />
         </div>
 
@@ -557,7 +588,7 @@ export default function GameBoard({ initialState, myPlayer, onAction, isOnline, 
         <MulliganDialog hand={me.hand} onDecision={d => performAction({ type: 'MULLIGAN', doMulligan: d })} />
       )}
       {gameState.phase === 'gameOver' && (
-        <GameEndScreen isWinner={gameState.winner === myPlayer} winReason={gameState.winReason || 'unknown'} playerScore={me.gigArea.length} opponentScore={opp.gigArea.length} onMenu={() => { window.location.href = '/'; }} />
+        <GameEndScreen isWinner={gameState.winner === myPlayer} winReason={gameState.winReason || 'unknown'} playerScore={me.gigArea.length} opponentScore={opp.gigArea.length} eloChange={eloChange} isRanked={isRanked} onMenu={() => { window.location.href = '/'; }} />
       )}
       <PendingActionOverlay
         gameState={gameState}

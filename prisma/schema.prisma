@@ -50,6 +50,7 @@ model Game {
   player1Id    String    @db.ObjectId
   player2Id    String?   @db.ObjectId
   isAiGame     Boolean   @default(false)
+  isRanked     Boolean   @default(false)
   aiDifficulty String?
   status       String    @default("in_progress")
   winnerId     String?   @db.ObjectId
