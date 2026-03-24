@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
 import GameLog from './GameLog';
@@ -64,10 +64,10 @@ interface GameBoardProps {
   myPlayer: PlayerID;
   onAction?: (action: GameAction) => void;
   isOnline?: boolean;
-  onRegisterOpponentHandler?: (handler: (action: GameAction, player: PlayerID) => void) => void;
+  serverState?: GameState | null;
 }
 
-export default function GameBoard({ initialState, myPlayer, onAction, isOnline, onRegisterOpponentHandler }: GameBoardProps) {
+export default function GameBoard({ initialState, myPlayer, onAction, isOnline, serverState }: GameBoardProps) {
   const t = useTranslations();
   const locale = useLocale();
   const PHASE_LABELS: Record<GamePhase, string> = {
@@ -75,16 +75,18 @@ export default function GameBoard({ initialState, myPlayer, onAction, isOnline, 
     play: t('game.phasePlay'), attack: t('game.phaseAttack'), defense: t('game.phaseDefense'), gameOver: t('game.phaseGameOver'),
   };
   const [gameState, setGameState] = useState<GameState>(initialState);
-  // Register handler for opponent actions (online mode)
+  // Sync with server state in online mode
+  const serverStateRef = useRef<number>(0);
   useEffect(() => {
-    if (onRegisterOpponentHandler) {
-      onRegisterOpponentHandler((action: GameAction, player: PlayerID) => {
-        setGameState(prev => {
-          try { return GameEngine.applyAction(prev, player, action); } catch { return prev; }
-        });
-      });
+    if (serverState && serverState.turn !== undefined) {
+      // Only update if server state is different (avoid overriding local optimistic updates needlessly)
+      const serverKey = `${serverState.turn}-${serverState.phase}-${serverState.activePlayer}-${serverState.player1.hand.length}-${serverState.player2.hand.length}`;
+      const localKey = `${gameState.turn}-${gameState.phase}-${gameState.activePlayer}-${gameState.player1.hand.length}-${gameState.player2.hand.length}`;
+      if (serverKey !== localKey) {
+        setGameState(serverState);
+      }
     }
-  }, [onRegisterOpponentHandler]);
+  }, [serverState]);
   const [selectedCardIndex, setSelectedCardIndex] = useState<number | null>(null);
   const [hoveredCard, setHoveredCard] = useState<CardData | null>(null);
   const [previewCard, setPreviewCard] = useState<CardData | null>(null);
@@ -211,15 +213,21 @@ export default function GameBoard({ initialState, myPlayer, onAction, isOnline, 
   }, [gameState, myPlayer]);
 
   const performAction = useCallback((action: GameAction) => {
-    const ns = GameEngine.applyAction(gameState, myPlayer, action);
-    setGameState(ns);
+    if (isOnline && onAction) {
+      // Online: apply locally for instant feedback, server will send authoritative state
+      const ns = GameEngine.applyAction(gameState, myPlayer, action);
+      setGameState(ns);
+      onAction(action);
+    } else {
+      // Local/AI: apply directly
+      const ns = GameEngine.applyAction(gameState, myPlayer, action);
+      setGameState(ns);
+    }
     setSelectedCardIndex(null);
     if (action.type !== 'ATTACK_UNIT' && action.type !== 'ATTACK_RIVAL') {
       setSelectedAttacker(null);
     }
     setPendingGearIndex(null);
-    // In online mode, also send the action to the server
-    if (isOnline && onAction) { onAction(action); }
   }, [gameState, myPlayer, isOnline, onAction]);
 
   const playableIndices = useMemo(() => me.hand.map((c, i) => {

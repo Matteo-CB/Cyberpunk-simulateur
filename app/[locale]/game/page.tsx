@@ -14,7 +14,7 @@ const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3000'
 export default function GamePage() {
   const t = useTranslations();
   const [gameState, setGameState] = useState<GameState | null>(null);
-  const opponentHandlerRef = useRef<((action: GameAction, player: PlayerID) => void) | null>(null);
+  const [serverState, setServerState] = useState<GameState | null>(null);
   const [myPlayer, setMyPlayer] = useState<PlayerID>('player1');
   const [isOnline, setIsOnline] = useState(false);
   const [status, setStatus] = useState<string>('loading');
@@ -193,15 +193,9 @@ export default function GamePage() {
           }
         }
       }
-      setGameState(state);
+      if (!gameState) setGameState(state); // First state = initial
+      setServerState(state);
       setStatus('playing');
-    });
-
-    s.on('game:action-received', (data: { action: GameAction; player: PlayerID }) => {
-      // Opponent action — apply directly in GameBoard via registered handler
-      if (opponentHandlerRef.current) {
-        opponentHandlerRef.current(data.action, data.player);
-      }
     });
 
     s.on('room:player-left', () => setStatus('opponent-left'));
@@ -259,6 +253,6 @@ export default function GamePage() {
     myPlayer={myPlayer}
     isOnline={isOnline}
     onAction={isOnline ? handleOnlineAction : undefined}
-    onRegisterOpponentHandler={isOnline ? (handler) => { opponentHandlerRef.current = handler; } : undefined}
+    serverState={isOnline ? serverState : undefined}
   />;
 }
