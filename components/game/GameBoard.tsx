@@ -291,6 +291,7 @@ export default function GameBoard({ initialState, myPlayer, onAction, isOnline, 
             legends={player.legends} isOwner={isOwner} canCall={canCall} compact={compact}
             onCall={isOwner ? (i) => performAction({ type: 'CALL_LEGEND', legendIndex: i }) : undefined}
             onGoSolo={isOwner ? (i) => performAction({ type: 'GO_SOLO', legendIndex: i }) : undefined}
+            onPreview={(card) => setPreviewCard(card)}
           />
         </Zone>
 

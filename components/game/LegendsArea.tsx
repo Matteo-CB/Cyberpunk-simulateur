@@ -12,6 +12,7 @@ interface LegendsAreaProps {
   canCall: boolean;
   onCall?: (index: number) => void;
   onGoSolo?: (index: number) => void;
+  onPreview?: (card: CardData) => void;
   compact?: boolean;
 }
 
@@ -28,6 +29,7 @@ export default function LegendsArea({
   canCall,
   onCall,
   onGoSolo,
+  onPreview,
   compact,
 }: LegendsAreaProps) {
   const t = useTranslations();
@@ -87,6 +89,8 @@ export default function LegendsArea({
             onCall?.(i);
           } else if (hasGoSolo) {
             onGoSolo?.(i);
+          } else if (legend.isFaceUp && onPreview) {
+            onPreview(legend.card);
           }
         };
 
@@ -107,7 +111,7 @@ export default function LegendsArea({
                 height: SLOT_H,
                 borderRadius: 5,
                 overflow: 'hidden',
-                cursor: isCallable || hasGoSolo ? 'pointer' : 'default',
+                cursor: isCallable || hasGoSolo || (legend.isFaceUp && onPreview) ? 'pointer' : 'default',
                 border: isCallable
                   ? '2px solid #ffd700'
                   : legend.isSpent
