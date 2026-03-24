@@ -216,19 +216,6 @@ function generateBadgeSVG(badge, size) {
     ${badge.symbol}
   </text>
 
-  <!-- Tier number -->
-  <text x="${cx}" y="${cy + size * 0.18}" text-anchor="middle" dominant-baseline="central"
-        font-family="Arial, sans-serif" font-size="${size * 0.06}" font-weight="bold"
-        fill="${badge.color}" letter-spacing="2" opacity="0.5">
-    ${badge.tier}
-  </text>
-
-  <!-- Label at bottom -->
-  <text x="${cx}" y="${cy + size * 0.32}" text-anchor="middle" dominant-baseline="central"
-        font-family="Arial, sans-serif" font-size="${size * 0.065}" font-weight="bold"
-        fill="${badge.color}" letter-spacing="3" opacity="0.7">
-    ${badge.label}
-  </text>
 
   ${isTop ? `
   <!-- Top tier crown dots -->
