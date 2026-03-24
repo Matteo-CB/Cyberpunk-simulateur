@@ -204,46 +204,12 @@ export default function LegalPage() {
 
           <Separator />
 
-          {/* Developer */}
-          <section>
-            <h2 className="font-refinery" style={sectionTitle}>Developer</h2>
-            <p style={bodyText}>
-              This simulator is developed and maintained by{' '}
-              <a
-                href="https://hiddenlab.fr"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: '#00f0ff', textDecoration: 'none', transition: 'opacity 0.2s' }}
-              >
-                HiddenLab
-              </a>.
-            </p>
-          </section>
-
-          <Separator />
-
           {/* Contact */}
           <section>
             <h2 className="font-refinery" style={sectionTitle}>Contact and Takedown</h2>
             <p style={bodyText}>
-              For any questions, concerns, or takedown requests from rights holders, please contact us via our{' '}
-              <a
-                href="https://discord.gg/SvAr4mudPV"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: '#5865F2', textDecoration: 'none' }}
-              >
-                Discord server
-              </a>{' '}
-              or through{' '}
-              <a
-                href="https://hiddenlab.fr"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: '#00f0ff', textDecoration: 'none' }}
-              >
-                hiddenlab.fr
-              </a>.
+              For any questions, concerns, or takedown requests from rights holders, please contact us at{' '}
+              <span style={{ color: '#00f0ff' }}>cyberpunktcgsimulator@proton.me</span>.
             </p>
           </section>
 
@@ -259,15 +225,7 @@ export default function LegalPage() {
             }}
           >
             <p>
-              Cyberpunk TCG Simulator | Fan made project by{' '}
-              <a
-                href="https://hiddenlab.fr"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: '#00f0ff60', textDecoration: 'none' }}
-              >
-                HiddenLab
-              </a>
+              Cyberpunk TCG Simulator | Fan made project
             </p>
             <p>
               Cyberpunk TCG by Weird CO. Cyberpunk 2077 by CD Projekt Red. Cyberpunk RPG by R. Talsorian Games.

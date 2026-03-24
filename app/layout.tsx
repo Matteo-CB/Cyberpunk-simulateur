@@ -3,8 +3,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Cyberpunk TCG Simulator',
-  description: 'Fan made Cyberpunk Trading Card Game Simulator. Play the Cyberpunk TCG online with friends. Built by HiddenLab.',
-  authors: [{ name: 'HiddenLab', url: 'https://hiddenlab.fr' }],
+  description: 'Fan made Cyberpunk Trading Card Game Simulator. Play the Cyberpunk TCG online with friends.',
   manifest: '/site.webmanifest',
   icons: {
     icon: [
