@@ -56,6 +56,7 @@ interface RoomData {
   gameSaved: boolean;
   hasActedThisTurn: { player1: boolean; player2: boolean };
   lastActivePlayer: PlayerID | null;
+  deckReady: { player1: boolean; player2: boolean };
 }
 
 interface ChatPayload {
@@ -459,6 +460,7 @@ async function startServer() {
           gameSaved: false,
           hasActedThisTurn: { player1: false, player2: false },
           lastActivePlayer: null,
+          deckReady: { player1: false, player2: false },
         };
 
         rooms.set(roomCode, room);
@@ -557,6 +559,26 @@ async function startServer() {
       if (!roomCode) return;
 
       handleLeaveRoom(socket, roomCode);
+    });
+
+    // --- Game: Deck Ready ---
+    socket.on('game:deck-ready', (data: { roomCode: string; player: 'player1' | 'player2' }) => {
+      const room = rooms.get(data.roomCode);
+      if (!room) return;
+
+      room.deckReady[data.player] = true;
+      console.log(`[socket] ${data.player} deck ready in room ${data.roomCode}. P1=${room.deckReady.player1}, P2=${room.deckReady.player2}`);
+
+      // Notify all clients
+      io.to(data.roomCode).emit('game:deck-status', {
+        player1Ready: room.deckReady.player1,
+        player2Ready: room.deckReady.player2,
+      });
+
+      // When both ready, tell the host to create the game
+      if (room.deckReady.player1 && room.deckReady.player2) {
+        io.to(data.roomCode).emit('game:both-ready');
+      }
     });
 
     // --- Game: Action ---

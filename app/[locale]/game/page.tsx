@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import GameBoard from '@/components/game/GameBoard';
 import DeckSelector from '@/components/game/DeckSelector';
 import { GameEngine } from '@/lib/engine/GameEngine';
-import { getAllCards, getCardById } from '@/lib/data/cardLoader';
+import { getAllCards } from '@/lib/data/cardLoader';
 import type { GameState, GameAction, PlayerID } from '@/lib/engine/types';
 import type { CardData } from '@/lib/data/types';
 import { io, type Socket } from 'socket.io-client';
@@ -20,24 +20,22 @@ export default function GamePage() {
   const [myPlayer, setMyPlayer] = useState<PlayerID>('player1');
   const [isOnline, setIsOnline] = useState(false);
   const [isRanked, setIsRanked] = useState(false);
+  // Status flow: loading → connecting → waiting → deck-select → waiting-opponent-deck → playing
   const [status, setStatus] = useState<string>('loading');
   const socketRef = useRef<Socket | null>(null);
   const roomCodeRef = useRef<string | null>(null);
   const gameCreatedRef = useRef(false);
   const configRef = useRef<any>(null);
 
-  // Deck selection state
-  const [showDeckSelector, setShowDeckSelector] = useState(false);
-  const [myDeck, setMyDeck] = useState<CardData[] | null>(null);
-  const [myLegends, setMyLegends] = useState<CardData[] | null>(null);
+  // Deck selection
+  const myDeckRef = useRef<{ cards: CardData[]; legends: CardData[] } | null>(null);
+  const [opponentDeckReady, setOpponentDeckReady] = useState(false);
 
-  // Timer state
+  // Timer & game end
   const [timerEnd, setTimerEnd] = useState<number | null>(null);
-
-  // Game end data (ELO change from server)
   const [gameEndData, setGameEndData] = useState<{ eloChange: number | null; isRanked: boolean } | null>(null);
 
-  // Helper: generate random deck for opponent
+  // Random deck/legends generators
   const pickRandomDeck = useCallback(() => {
     const allCards = getAllCards();
     const nonLegends = allCards.filter((c) => c.card_type !== 'legend');
@@ -74,11 +72,9 @@ export default function GamePage() {
     const config = configStr ? JSON.parse(configStr) : { mode: 'ai', difficulty: 'easy' };
     configRef.current = config;
 
-    // Both AI and online: show deck selector first
+    // AI mode: deck selector immediately
     if (config.mode !== 'online') {
-      // AI mode: show deck selector immediately
       setStatus('deck-select');
-      setShowDeckSelector(true);
       return;
     }
 
@@ -90,7 +86,6 @@ export default function GamePage() {
     setMyPlayer(isHost ? 'player1' : 'player2');
     setStatus('connecting');
 
-    // Connect socket immediately
     const s = io(SOCKET_URL, { transports: ['polling', 'websocket'] });
     socketRef.current = s;
 
@@ -105,7 +100,6 @@ export default function GamePage() {
       s.emit('auth', { userId, username });
 
       if (isHost) {
-        console.log('[game] Creating room', config.roomCode);
         s.emit('room:create', {
           roomCode: config.roomCode, userId, username,
           isPrivate: config.isPrivate || false,
@@ -115,33 +109,57 @@ export default function GamePage() {
           if (!res?.ok) {
             s.emit('room:join', { roomCode: config.roomCode, userId, username }, (joinRes: any) => {
               if (!joinRes?.ok) { setStatus('error'); return; }
-              // Show deck selector while waiting
-              setStatus('deck-select');
-              setShowDeckSelector(true);
+              setStatus('waiting');
             });
             return;
           }
-          // Show deck selector while waiting for opponent
-          setStatus('deck-select');
-          setShowDeckSelector(true);
+          setStatus('waiting'); // Wait for opponent to join
         });
       } else {
-        console.log('[game] Joining room', config.roomCode);
         s.emit('room:join', { roomCode: config.roomCode, userId, username }, (res: any) => {
           if (!res?.ok) { setStatus('error'); return; }
           if (res.room?.gameMode === 'ranked' || res.room?.isRanked) {
             setIsRanked(true);
           }
-          // Show deck selector
-          setStatus('deck-select');
-          setShowDeckSelector(true);
+          setStatus('waiting');
         });
       }
     });
 
+    // Opponent joined → both players go to deck select
     s.on('room:player-joined', () => {
-      console.log('[game] Player joined event received, isHost:', isHost);
-      // Don't create game yet — wait for deck selection
+      console.log('[game] Opponent joined, showing deck selector');
+      setStatus('deck-select');
+    });
+
+    // For guest: if host already in room, also go to deck select
+    s.on('room:updated', (room: any) => {
+      if (!isHost && room?.hostId && room?.guestId) {
+        // Both players in room
+        setStatus((prev) => prev === 'waiting' ? 'deck-select' : prev);
+      }
+    });
+
+    // Deck status updates from server
+    s.on('game:deck-status', (data: { player1Ready: boolean; player2Ready: boolean }) => {
+      const oppReady = isHost ? data.player2Ready : data.player1Ready;
+      setOpponentDeckReady(oppReady);
+    });
+
+    // Both players selected their deck → host creates the game
+    s.on('game:both-ready', () => {
+      console.log('[game] Both decks ready');
+      if (isHost && myDeckRef.current && !gameCreatedRef.current) {
+        gameCreatedRef.current = true;
+        const state = GameEngine.createGame(
+          myDeckRef.current.cards, myDeckRef.current.legends,
+          pickRandomDeck(), pickRandomLegends(),
+          { player1UserId: userId }
+        );
+        setGameState(state);
+        setStatus('playing');
+        s.emit('game:state-update', { roomCode: config.roomCode, gameState: state });
+      }
     });
 
     s.on('game:state-update', (payload: any) => {
@@ -161,14 +179,9 @@ export default function GamePage() {
         };
         for (const p of [state.player1, state.player2]) {
           if (p) {
-            p.hand = p.hand || [];
-            p.deck = p.deck || [];
-            p.field = p.field || [];
-            p.trash = p.trash || [];
-            p.legends = p.legends || [];
-            p.eddies = p.eddies || [];
-            p.fixerArea = p.fixerArea || [];
-            p.gigArea = p.gigArea || [];
+            p.hand = p.hand || []; p.deck = p.deck || []; p.field = p.field || [];
+            p.trash = p.trash || []; p.legends = p.legends || []; p.eddies = p.eddies || [];
+            p.fixerArea = p.fixerArea || []; p.gigArea = p.gigArea || [];
           }
         }
       }
@@ -176,17 +189,12 @@ export default function GamePage() {
       seqRef.current += 1;
       setServerState({ state, seq: seqRef.current });
       setStatus('playing');
-      setShowDeckSelector(false);
     });
 
     s.on('game:timer-start', (data: { activePlayer: string; duration: number; startedAt: number }) => {
       setTimerEnd(data.startedAt + data.duration);
     });
-
-    s.on('game:timer-expired', () => {
-      setTimerEnd(null);
-    });
-
+    s.on('game:timer-expired', () => setTimerEnd(null));
     s.on('game:ended', (data: any) => {
       const myEloChange = isHost ? data.player1EloChange : data.player2EloChange;
       setGameEndData({ eloChange: myEloChange ?? null, isRanked: data.isRanked });
@@ -200,17 +208,14 @@ export default function GamePage() {
     return () => { s.disconnect(); };
   }, []);
 
-  // Handle deck selection — starts the game
+  // Deck selected by this player
   const handleDeckSelected = useCallback((cards: CardData[], legends: CardData[]) => {
-    setMyDeck(cards);
-    setMyLegends(legends);
-    setShowDeckSelector(false);
-
+    myDeckRef.current = { cards, legends };
     const config = configRef.current;
     if (!config) return;
 
     if (config.mode !== 'online') {
-      // AI mode: create game immediately
+      // AI: start game immediately
       setGameState(GameEngine.createGame(cards, legends, pickRandomDeck(), pickRandomLegends(), {
         isAI: true, aiDifficulty: config.difficulty || 'easy',
       }));
@@ -218,35 +223,19 @@ export default function GamePage() {
       return;
     }
 
-    // Online mode: host creates the game with selected deck
+    // Online: notify server we're ready
     const s = socketRef.current;
     if (!s) return;
-
-    const isHost = config.isHost;
-    let userId = config.userId || 'anon';
-
-    if (isHost) {
-      // Host creates game with their deck + random for opponent
-      if (!gameCreatedRef.current) {
-        gameCreatedRef.current = true;
-        const state = GameEngine.createGame(
-          cards, legends, pickRandomDeck(), pickRandomLegends(),
-          { player1UserId: userId }
-        );
-        setGameState(state);
-        setStatus('playing');
-        s.emit('game:state-update', { roomCode: config.roomCode, gameState: state });
-      }
-    } else {
-      // Guest: just wait for host to send game state
-      setStatus('waiting-game');
-    }
+    s.emit('game:deck-ready', { roomCode: config.roomCode, player: config.isHost ? 'player1' : 'player2' });
+    setStatus('waiting-opponent-deck');
   }, [pickRandomDeck, pickRandomLegends]);
 
   const handleOnlineAction = useCallback((action: GameAction) => {
     if (!socketRef.current || !roomCodeRef.current) return;
     socketRef.current.emit('game:action', { roomCode: roomCodeRef.current, action, player: myPlayer });
   }, [myPlayer]);
+
+  // ═══ RENDER ═══
 
   if (status === 'error') return (
     <div className="flex flex-col items-center justify-center min-h-screen" style={{ background: '#0a0a12', gap: 16 }}>
@@ -264,8 +253,22 @@ export default function GamePage() {
     </div>
   );
 
-  // Deck selection screen
-  if (showDeckSelector) return (
+  // Waiting for opponent to join
+  if (status === 'waiting' || status === 'connecting') return (
+    <div className="flex flex-col items-center justify-center min-h-screen" style={{ background: '#0a0a12', gap: 16 }}>
+      {roomCodeRef.current && (
+        <div className="font-refinery" style={{ color: '#fcee09', fontSize: 36, letterSpacing: '0.3em', textShadow: '0 0 20px rgba(252,238,9,0.3)' }}>
+          {roomCodeRef.current}
+        </div>
+      )}
+      <div className="font-blender text-sm uppercase tracking-widest animate-pulse" style={{ color: '#5a6a7a' }}>
+        {status === 'connecting' ? 'Connecting...' : t('game.waitingOpponent')}
+      </div>
+    </div>
+  );
+
+  // Deck selection (both AI and online)
+  if (status === 'deck-select') return (
     <div className="min-h-screen" style={{ background: '#0a0a12' }}>
       {isOnline && roomCodeRef.current && (
         <div style={{ position: 'absolute', top: 20, left: 0, right: 0, textAlign: 'center', zIndex: 10 }}>
@@ -281,15 +284,19 @@ export default function GamePage() {
     </div>
   );
 
-  if (status === 'waiting' || status === 'connecting' || status === 'waiting-game') return (
+  // Waiting for opponent to pick deck
+  if (status === 'waiting-opponent-deck') return (
     <div className="flex flex-col items-center justify-center min-h-screen" style={{ background: '#0a0a12', gap: 16 }}>
       {roomCodeRef.current && (
-        <div className="font-refinery" style={{ color: '#fcee09', fontSize: 36, letterSpacing: '0.3em', textShadow: '0 0 20px rgba(252,238,9,0.3)' }}>
+        <div className="font-refinery" style={{ color: '#fcee09', fontSize: 28, letterSpacing: '0.3em', textShadow: '0 0 20px rgba(252,238,9,0.3)' }}>
           {roomCodeRef.current}
         </div>
       )}
-      <div className="font-blender text-sm uppercase tracking-widest animate-pulse" style={{ color: '#5a6a7a' }}>
-        {status === 'connecting' ? 'Connecting...' : status === 'waiting-game' ? t('game.waitingForHost') : 'Waiting for opponent...'}
+      <div className="font-blender" style={{ color: '#22c55e', fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+        {t('game.deckSelected')}
+      </div>
+      <div className="font-blender text-sm uppercase tracking-widest animate-pulse" style={{ color: '#5a6a7a', marginTop: 8 }}>
+        {t('game.waitingOpponentDeck')}
       </div>
     </div>
   );
