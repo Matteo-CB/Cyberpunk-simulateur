@@ -221,9 +221,10 @@ export default function GamePage() {
       setTimerEnd(null);
     });
 
-    // Game end event (ELO changes from server)
-    s.on('game:ended', (data: { eloChange: number | null; isRanked: boolean }) => {
-      setGameEndData({ eloChange: data.eloChange, isRanked: data.isRanked });
+    // Game end event (ELO changes from server — per-player)
+    s.on('game:ended', (data: any) => {
+      const myEloChange = isHost ? data.player1EloChange : data.player2EloChange;
+      setGameEndData({ eloChange: myEloChange ?? null, isRanked: data.isRanked });
       setTimerEnd(null);
     });
 

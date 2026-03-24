@@ -262,33 +262,25 @@ async function handleGameOver(room: RoomData, state: GameState, io: SocketIOServ
 
         console.log(`[game-over] ELO: ${game.player1.username} ${oldP1Elo}->${p1Elo.newElo}, ${game.player2.username} ${oldP2Elo}->${p2Elo.newElo}`);
 
-        // Update player 1
-        await prisma.user.update({
-          where: { id: room.hostId },
-          data: {
-            elo: p1Elo.newElo,
-            ...(p1Result === 'win' ? { wins: { increment: 1 } } : p1Result === 'loss' ? { losses: { increment: 1 } } : { draws: { increment: 1 } }),
-          },
-        });
-        // Update player 2
-        await prisma.user.update({
-          where: { id: room.guestId! },
-          data: {
-            elo: p2Elo.newElo,
-            ...(p2Result === 'win' ? { wins: { increment: 1 } } : p2Result === 'loss' ? { losses: { increment: 1 } } : { draws: { increment: 1 } }),
-          },
-        });
-
         // Placement + Discord sync for each player
         const playerIds = [room.hostId, room.guestId!];
+        const results = [p1Result, p2Result];
         const oldElos = [oldP1Elo, oldP2Elo];
         const newElos = [p1Elo.newElo, p2Elo.newElo];
+        const eloValues = [p1Elo.newElo, p2Elo.newElo];
 
         for (let idx = 0; idx < playerIds.length; idx++) {
           const pid = playerIds[idx];
+          const res = results[idx];
+
+          // Single update: ELO + wins/losses + gamesPlayed all at once
           const updated = await prisma.user.update({
             where: { id: pid },
-            data: { gamesPlayed: { increment: 1 } },
+            data: {
+              elo: eloValues[idx],
+              gamesPlayed: { increment: 1 },
+              ...(res === 'win' ? { wins: { increment: 1 } } : res === 'loss' ? { losses: { increment: 1 } } : { draws: { increment: 1 } }),
+            },
             select: { gamesPlayed: true, placementCompleted: true, discordId: true, elo: true, username: true },
           });
 
@@ -344,13 +336,15 @@ async function handleGameOver(room: RoomData, state: GameState, io: SocketIOServ
       },
     });
 
-    // Broadcast to clients
+    // Broadcast to clients — send per-player ELO changes
     io.to(room.code).emit('game:ended', {
       winnerId,
       winReason: state.winReason,
       player1Score: p1Score,
       player2Score: p2Score,
-      eloChange,
+      // Per-player ELO changes (signed: positive = gained, negative = lost)
+      player1EloChange: room.isRanked && winnerId ? (winnerId === room.hostId ? eloChange : eloChange ? -eloChange : 0) : null,
+      player2EloChange: room.isRanked && winnerId ? (winnerId === room.guestId ? eloChange : eloChange ? -eloChange : 0) : null,
       isRanked: room.isRanked,
     });
 
