@@ -221,48 +221,33 @@ async function handleGameOver(room: RoomData, state: GameState, io: SocketIOServ
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${port}`;
 
-  console.log(`[game-over] Room ${room.code}: winner=${state.winner}, reason=${state.winReason}, ranked=${room.isRanked}, host=${room.hostId}, guest=${room.guestId}`);
-  console.log(`[game-over] Calling API at ${appUrl}/api/game, INTERNAL_API_KEY set: ${!!INTERNAL_API_KEY}`);
+  const winnerId = state.winner === 'player1' ? room.hostId
+                 : state.winner === 'player2' ? room.guestId
+                 : null;
+  const p1Score = state.player1.gigArea.length;
+  const p2Score = state.player2.gigArea.length;
+
+  console.log(`[game-over] Room ${room.code}: winner=${state.winner}, reason=${state.winReason}, ranked=${room.isRanked}`);
 
   try {
-    // Step 1: Create game record
-    const createRes = await fetch(`${appUrl}/api/game`, {
+    // Single internal API call — creates + completes game in one step
+    const res = await fetch(`${appUrl}/api/game/internal`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-internal-key': INTERNAL_API_KEY },
       body: JSON.stringify({
         player1Id: room.hostId,
         player2Id: room.guestId,
-        isAiGame: false,
         isRanked: room.isRanked,
-        gameState: { turn: state.turn, winReason: state.winReason, winner: state.winner },
-      }),
-    });
-    const game = await createRes.json();
-    console.log(`[game-over] POST /api/game response:`, JSON.stringify(game).slice(0, 200));
-    if (!game?.id) {
-      console.error('[socket] Failed to create game record:', game);
-      return;
-    }
-
-    // Step 2: Complete game with winner and scores
-    const winnerId = state.winner === 'player1' ? room.hostId
-                   : state.winner === 'player2' ? room.guestId
-                   : null;
-    const p1Score = state.player1.gigArea.length;
-    const p2Score = state.player2.gigArea.length;
-
-    const completeRes = await fetch(`${appUrl}/api/game`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'x-internal-key': INTERNAL_API_KEY },
-      body: JSON.stringify({
-        id: game.id,
         winnerId,
         player1Score: p1Score,
         player2Score: p2Score,
+        winReason: state.winReason,
+        turn: state.turn,
       }),
     });
-    const result = await completeRes.json();
-    console.log(`[game-over] PUT /api/game response:`, JSON.stringify(result).slice(0, 300));
+
+    const result = await res.json();
+    console.log(`[game-over] API response (${res.status}):`, JSON.stringify(result).slice(0, 300));
 
     // Broadcast game:ended with ELO info to clients
     io.to(room.code).emit('game:ended', {
@@ -274,7 +259,7 @@ async function handleGameOver(room: RoomData, state: GameState, io: SocketIOServ
       isRanked: room.isRanked,
     });
 
-    console.log(`[socket] Game saved for room ${room.code}: winner=${state.winner}, ranked=${room.isRanked}, eloChange=${result.eloChange ?? 'N/A'}`);
+    console.log(`[game-over] Game saved: ranked=${room.isRanked}, eloChange=${result.eloChange ?? 'N/A'}`);
   } catch (err) {
     console.error('[socket] Error saving game:', err);
   }
