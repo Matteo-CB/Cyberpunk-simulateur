@@ -116,22 +116,42 @@ export default function GamePage() {
     }).catch(() => {});
 
     s.on('connect', () => {
-      console.log('[game] Socket connected, joining room', config.roomCode);
+      console.log('[game] Socket connected');
       s.emit('auth', { userId, username });
-      s.emit('room:join', { roomCode: config.roomCode, userId, username }, (res: any) => {
-        console.log('[game] Room join result:', res?.ok, 'guestId:', res?.room?.guestId);
-        if (!res?.ok) { setStatus('error'); return; }
 
-        if (isHost) {
-          if (res.room?.guestId && res.room.guestId !== userId) {
-            createAndSendGame(s, userId);
-          } else {
-            setStatus('waiting');
+      if (isHost) {
+        // Host: CREATE the room here (not on the online page)
+        console.log('[game] Creating room', config.roomCode);
+        s.emit('room:create', {
+          roomCode: config.roomCode, userId, username,
+          isPrivate: config.isPrivate || false,
+          isRanked: config.gameMode === 'ranked',
+          gameMode: config.gameMode || 'casual',
+        }, (res: any) => {
+          console.log('[game] Room create result:', res?.ok);
+          if (!res?.ok) {
+            // Room might already exist (reconnect) — try joining instead
+            s.emit('room:join', { roomCode: config.roomCode, userId, username }, (joinRes: any) => {
+              if (!joinRes?.ok) { setStatus('error'); return; }
+              if (joinRes.room?.guestId && joinRes.room.guestId !== userId) {
+                createAndSendGame(s, userId);
+              } else {
+                setStatus('waiting');
+              }
+            });
+            return;
           }
-        } else {
           setStatus('waiting');
-        }
-      });
+        });
+      } else {
+        // Guest: JOIN the room
+        console.log('[game] Joining room', config.roomCode);
+        s.emit('room:join', { roomCode: config.roomCode, userId, username }, (res: any) => {
+          console.log('[game] Room join result:', res?.ok);
+          if (!res?.ok) { setStatus('error'); return; }
+          setStatus('waiting');
+        });
+      }
     });
 
     s.on('room:player-joined', () => {

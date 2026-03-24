@@ -86,10 +86,6 @@ export default function PlayOnlinePage() {
     s.on('room:list-update', (rooms: PublicRoom[]) => setPublicRooms(rooms));
     s.on('games:list-update', (games: ActiveGame[]) => setActiveGames(games));
     s.on('room:updated', () => s.emit('room:list'));
-    s.on('room:player-joined', () => {
-      // Opponent joined — redirect to game
-      router.push('/game');
-    });
     setSocket(s);
 
     const interval = setInterval(() => s.emit('room:list'), 5000);
@@ -98,36 +94,23 @@ export default function PlayOnlinePage() {
 
   const handleCreatePublic = useCallback((mode: 'casual' | 'ranked') => {
     if (!user) { setError('You must be logged in'); return; }
-    if (!socket || !socket.connected) { setError('Connecting to server...'); return; }
     const code = generateRoomCode();
-    socket.emit('room:create', {
-      roomCode: code, userId: user.id, username: user.username,
-      isPrivate: false, isRanked: mode === 'ranked', gameMode: mode,
-    }, (res: { ok: boolean; error?: string }) => {
-      if (res.ok) {
-        setCreatedCode(code);
-        sessionStorage.setItem('gameConfig', JSON.stringify({ mode: 'online', roomCode: code, isHost: true, gameMode: mode }));
-      } else {
-        setError(res.error || 'Failed to create room');
-      }
-    });
-  }, [socket, user]);
+    sessionStorage.setItem('gameConfig', JSON.stringify({
+      mode: 'online', roomCode: code, isHost: true, gameMode: mode,
+      userId: user.id, username: user.username,
+    }));
+    router.push('/game');
+  }, [user, router]);
 
   const handleCreatePrivate = useCallback(() => {
-    if (!socket || !user) return;
+    if (!user) { setError('You must be logged in'); return; }
     const code = generateRoomCode();
-    socket.emit('room:create', {
-      roomCode: code, userId: user.id, username: user.username,
-      isPrivate: true, isRanked: privateMode === 'ranked', gameMode: privateMode,
-    }, (res: { ok: boolean; error?: string }) => {
-      if (res.ok) {
-        setCreatedCode(code);
-        sessionStorage.setItem('gameConfig', JSON.stringify({ mode: 'online', roomCode: code, isHost: true, gameMode: privateMode }));
-      } else {
-        setError(res.error || 'Failed to create room');
-      }
-    });
-  }, [socket, user, privateMode]);
+    sessionStorage.setItem('gameConfig', JSON.stringify({
+      mode: 'online', roomCode: code, isHost: true, gameMode: privateMode, isPrivate: true,
+      userId: user.id, username: user.username,
+    }));
+    router.push('/game');
+  }, [user, router, privateMode]);
 
   const handleJoin = useCallback((code: string) => {
     if (!user) {
