@@ -6,7 +6,27 @@ import { useTranslations } from 'next-intl';
 import CyberBackground from '@/components/CyberBackground';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { Link } from '@/lib/i18n/navigation';
+import Image from 'next/image';
 import { getLeagueTierForPlayer } from '@/lib/elo/elo';
+
+// Map tier key to icon filename
+const LEAGUE_ICONS: Record<string, string> = {
+  cyberpunk: '/images/leagues/cyberpunk.webp',
+  night_city_legend: '/images/leagues/night-city-legend.webp',
+  afterlife_regular: '/images/leagues/afterlife-regular.webp',
+  fixer: '/images/leagues/fixer.webp',
+  netrunner: '/images/leagues/netrunner.webp',
+  solo: '/images/leagues/solo.webp',
+  edgerunner: '/images/leagues/edgerunner.webp',
+  streetkid: '/images/leagues/streetkid.webp',
+  unranked: '',
+};
+
+function LeagueIcon({ tierKey, size = 20 }: { tierKey: string; size?: number }) {
+  const src = LEAGUE_ICONS[tierKey];
+  if (!src) return <span style={{ display: 'inline-block', width: size, height: size, lineHeight: `${size}px`, textAlign: 'center', color: '#4a4a5a', fontSize: size * 0.7 }}>?</span>;
+  return <Image src={src} alt={tierKey} width={size} height={size} style={{ objectFit: 'contain' }} />;
+}
 
 interface LeaderboardEntry {
   username: string;
@@ -28,14 +48,14 @@ interface UserInfo {
 }
 
 const LEAGUES = [
-  { key: 'cyberpunk', minElo: 2000, maxElo: null, color: '#FFD700', symbol: '\u2666' },
-  { key: 'night_city_legend', minElo: 1600, maxElo: 1999, color: '#FCAC00', symbol: '\u2605' },
-  { key: 'afterlife_regular', minElo: 1200, maxElo: 1599, color: '#FF003C', symbol: '\u25C9' },
-  { key: 'fixer', minElo: 1000, maxElo: 1199, color: '#00F0FF', symbol: '\u26A1' },
-  { key: 'netrunner', minElo: 800, maxElo: 999, color: '#A855F7', symbol: '\u2726' },
-  { key: 'solo', minElo: 550, maxElo: 799, color: '#3B82F6', symbol: '\u25C6' },
-  { key: 'edgerunner', minElo: 450, maxElo: 549, color: '#22C55E', symbol: '\u25C8' },
-  { key: 'streetkid', minElo: 0, maxElo: 449, color: '#6B7280', symbol: '\u25E6' },
+  { key: 'cyberpunk', minElo: 2000, maxElo: null, color: '#FFD700' },
+  { key: 'night_city_legend', minElo: 1600, maxElo: 1999, color: '#FCAC00' },
+  { key: 'afterlife_regular', minElo: 1200, maxElo: 1599, color: '#FF003C' },
+  { key: 'fixer', minElo: 1000, maxElo: 1199, color: '#00F0FF' },
+  { key: 'netrunner', minElo: 800, maxElo: 999, color: '#A855F7' },
+  { key: 'solo', minElo: 550, maxElo: 799, color: '#3B82F6' },
+  { key: 'edgerunner', minElo: 450, maxElo: 549, color: '#22C55E' },
+  { key: 'streetkid', minElo: 0, maxElo: 449, color: '#6B7280' },
 ];
 
 const PAGE_SIZE = 25;
@@ -135,7 +155,7 @@ export default function LeaderboardPage() {
           >
             {/* User tier badge */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <span style={{ fontSize: 28, color: userTier?.color || '#4a4a5a' }}>{userTier?.symbol || '?'}</span>
+              <LeagueIcon tierKey={userTier?.key || 'unranked'} size={36} />
               <div>
                 <div className="font-refinery" style={{ fontSize: 20, color: userTier?.color || '#4a4a5a', letterSpacing: '0.1em' }}>
                   {currentUser.placementCompleted ? userTier?.name : t('unranked')}
@@ -254,7 +274,7 @@ export default function LeaderboardPage() {
                           gap: 12,
                         }}
                       >
-                        <span style={{ fontSize: 22, color: league.color }}>{league.symbol}</span>
+                        <LeagueIcon tierKey={league.key} size={28} />
                         <div>
                           <div className="font-blender" style={{ fontSize: 13, fontWeight: 700, color: league.color }}>
                             {t(`tier_${league.key}`)}
@@ -382,7 +402,7 @@ export default function LeaderboardPage() {
 
                   {/* Player name */}
                   <div className="flex items-center" style={{ gap: 8, minWidth: 0 }}>
-                    <span style={{ color: tier.color, fontSize: 14, flexShrink: 0 }}>{tier.symbol}</span>
+                    <span style={{ flexShrink: 0 }}><LeagueIcon tierKey={tier.key} size={18} /></span>
                     <span style={{ color: isMe ? '#00f0ff' : '#e0e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {player.username}
                     </span>

@@ -159,6 +159,10 @@ export default function GamePage() {
         s.emit('room:join', { roomCode: config.roomCode, userId, username }, (res: any) => {
           console.log('[game] Room join result:', res?.ok);
           if (!res?.ok) { setStatus('error'); return; }
+          // Detect ranked mode from server room data (guest may not have it in config)
+          if (res.room?.gameMode === 'ranked' || res.room?.isRanked) {
+            setIsRanked(true);
+          }
           setStatus('waiting');
         });
       }

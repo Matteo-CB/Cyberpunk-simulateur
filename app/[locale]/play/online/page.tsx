@@ -112,12 +112,16 @@ export default function PlayOnlinePage() {
     router.push('/game');
   }, [user, router, privateMode]);
 
-  const handleJoin = useCallback((code: string) => {
+  const handleJoin = useCallback((code: string, gameMode?: 'casual' | 'ranked') => {
     if (!user) {
       setError('You must be logged in to join a room');
       return;
     }
-    sessionStorage.setItem('gameConfig', JSON.stringify({ mode: 'online', roomCode: code, isHost: false }));
+    sessionStorage.setItem('gameConfig', JSON.stringify({
+      mode: 'online', roomCode: code, isHost: false,
+      gameMode: gameMode || 'casual',
+      userId: user.id, username: user.username,
+    }));
     router.push('/game');
   }, [user, router]);
 
@@ -197,7 +201,7 @@ export default function PlayOnlinePage() {
                             <span className="font-blender" style={{ color: '#c0c8d0', fontSize: 12 }}>{room.hostUsername}</span>
                             <span className="font-blender" style={{ color: '#3a3a4a', fontSize: 10, marginLeft: 8 }}>{timeAgo(room.createdAt)}</span>
                           </div>
-                          <button onClick={() => handleJoin(room.code)} className="font-blender" style={{ fontSize: 10, color: '#fcee09', background: 'rgba(252,238,9,0.08)', border: '1px solid rgba(252,238,9,0.3)', borderRadius: 6, padding: '4px 14px', cursor: 'pointer', textTransform: 'uppercase' }}>
+                          <button onClick={() => handleJoin(room.code, 'casual')} className="font-blender" style={{ fontSize: 10, color: '#fcee09', background: 'rgba(252,238,9,0.08)', border: '1px solid rgba(252,238,9,0.3)', borderRadius: 6, padding: '4px 14px', cursor: 'pointer', textTransform: 'uppercase' }}>
                             {t('joinRoom')}
                           </button>
                         </div>
@@ -223,7 +227,7 @@ export default function PlayOnlinePage() {
                             <span className="font-blender" style={{ color: '#c0c8d0', fontSize: 12 }}>{room.hostUsername}</span>
                             <span className="font-blender" style={{ color: '#3a3a4a', fontSize: 10, marginLeft: 8 }}>{timeAgo(room.createdAt)}</span>
                           </div>
-                          <button onClick={() => handleJoin(room.code)} className="font-blender" style={{ fontSize: 10, color: '#ff003c', background: 'rgba(255,0,60,0.08)', border: '1px solid rgba(255,0,60,0.3)', borderRadius: 6, padding: '4px 14px', cursor: 'pointer', textTransform: 'uppercase' }}>
+                          <button onClick={() => handleJoin(room.code, 'ranked')} className="font-blender" style={{ fontSize: 10, color: '#ff003c', background: 'rgba(255,0,60,0.08)', border: '1px solid rgba(255,0,60,0.3)', borderRadius: 6, padding: '4px 14px', cursor: 'pointer', textTransform: 'uppercase' }}>
                             {t('joinRoom')}
                           </button>
                         </div>
