@@ -140,7 +140,7 @@ export async function PUT(req: NextRequest) {
             const placedTier = getLeagueTier(newElos[idx]);
             try {
               if (updated.discordId) {
-                await syncDiscordRole(updated.discordId, updated.elo);
+                await syncDiscordRole(updated.discordId, updated.elo, true);
               }
               await sendPlacementCompletedWebhook(
                 updated.discordId || null,
@@ -159,7 +159,7 @@ export async function PUT(req: NextRequest) {
               const newTier = getLeagueTier(newElos[idx]);
               // Sync Discord role if linked
               if (updated.discordId) {
-                await syncDiscordRole(updated.discordId, updated.elo);
+                await syncDiscordRole(updated.discordId, updated.elo, updated.placementCompleted);
               }
               // Send webhook notification for tier changes
               if (oldTier.key !== newTier.key) {

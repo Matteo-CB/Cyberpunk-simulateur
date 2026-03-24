@@ -161,7 +161,7 @@ export async function GET(req: NextRequest) {
     });
     if (userData) {
       try {
-        await syncDiscordRole(discordUser.id, userData.elo);
+        await syncDiscordRole(discordUser.id, userData.elo, userData.placementCompleted ?? false);
       } catch (e) {
         console.error('[link-discord/callback] Role sync error:', e);
       }

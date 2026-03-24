@@ -154,7 +154,8 @@ async function removeRole(discordId: string, roleId: string): Promise<void> {
  */
 export async function syncDiscordRole(
   discordId: string,
-  elo: number
+  elo: number,
+  placementCompleted?: boolean
 ): Promise<RankTier | null> {
   if (!BOT_TOKEN || !GUILD_ID) {
     console.warn('[roleSync] BOT_DISCORD_TOKEN or SERVER_DISCORD_ID not configured');
@@ -178,8 +179,9 @@ export async function syncDiscordRole(
       await removeRole(discordId, roleId);
     }
 
-    // Determine the correct tier
-    const tier = getRankTier(elo);
+    // Determine the correct tier (unranked if placement not completed)
+    const unrankedTier = RANK_TIERS.find(t => t.key === 'unranked');
+    const tier = placementCompleted === false && unrankedTier ? unrankedTier : getRankTier(elo);
     const targetRoleId = roleIds[tier.key];
 
     if (!targetRoleId) {
@@ -228,6 +230,7 @@ export async function syncAllDiscordRoles(): Promise<{
       id: true,
       discordId: true,
       elo: true,
+      placementCompleted: true,
     },
   });
 
@@ -242,7 +245,7 @@ export async function syncAllDiscordRoles(): Promise<{
     }
 
     try {
-      const result = await syncDiscordRole(user.discordId, user.elo);
+      const result = await syncDiscordRole(user.discordId, user.elo, (user as any).placementCompleted ?? false);
       if (result) {
         synced++;
       } else {
